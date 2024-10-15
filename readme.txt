@@ -11,3 +11,5 @@ The files included in this chapter are:
 - compile.bat - Windows batch file to compile the example using the CC65 compiler
 - example.chr - The tile and sprite character sets
 - example.s - This is the main assembly source file
+
+ha
