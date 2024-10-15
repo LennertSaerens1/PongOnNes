@@ -55,7 +55,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 
 .segment "TILES"
-.incbin "example.chr"
+.incbin "pong.chr"
 
 ;*****************************************************************
 ; Define NES interrupt vectors
