@@ -271,7 +271,19 @@ irq:
 	lda #%01000001
 	sta oam + (7*4) + 2
 
+; place ball sprite on the screen
+ 	lda #124
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+ 	lda #2
+ 	sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (8 * 4) + 2 ; set atttibutes
 
+ 	; set the ball velocity
+ 	lda #1
+ 	sta d_x
+ 	sta d_y
 
 paletteloop:
 	lda default_palette, x
@@ -396,6 +408,29 @@ paletteloop:
 		sta oam +(7*4)
  NOT_GAMEPAD_DOWN_2:
 
+ NOT_HITTOP:
+ 	lda oam + (8 * 4) + 0
+ 	cmp #210 ; have we hit the bottom border
+ 	bne NOT_HITBOTTOM
+ 		lda #$FF ; reverse direction (-1)
+ 		sta d_y
+ NOT_HITBOTTOM:
+ 	lda oam + (8 * 4) + 3 ; get the current x
+ 	clc
+ 	adc d_x	; add the X velocity
+ 	sta oam + (8 * 4) + 3
+ 	cmp #0 ; have we hit the left border
+ 	bne NOT_HITLEFT
+ 		lda #1 ; reverse direction
+ 		sta d_x
+ NOT_HITLEFT:
+ 	lda oam + (8 * 4) + 3
+ 	cmp #248 ; have we hit the right border
+ 	bne NOT_HITRIGHT
+ 		lda #$FF ; reverse direction (-1)
+ 		sta d_x
+ NOT_HITRIGHT:
+
 ; ensure our changes are rendered
  	lda #1
  	sta nmi_ready
@@ -407,6 +442,9 @@ paletteloop:
 ;*****************************************************************
 
 .segment "ZEROPAGE"
+
+d_x:			.res 1 ; x velocity of ball
+d_y:			.res 1 ; y velocity of ball
 
 paddr: .res 2 ; 16-bit address pointer
 
