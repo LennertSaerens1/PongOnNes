@@ -64,8 +64,8 @@ ATTRIBUTE_TABLE_1_ADDRESS	= $27C0
 
 .segment "ZEROPAGE"
 
-nmi_ready:		.res 1 ; set to 1 to push a PPU frame update, 
-					   ;        2 to turn rendering off next NMI
+nmi_ready:		.res 1	; set to 1 to push a PPU frame update, 
+						;        2 to turn rendering off next NMI
 ppu_ctl0:		.res 1 ; PPU Control Register 2 Value
 ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 
@@ -205,7 +205,6 @@ loop:
 	rts
 .endproc
 
-
 ;*****************************************************************
 ; write_text: This writes a section of text to the screen
 ; text_address - points to the text to write to the screen
@@ -229,3 +228,167 @@ exit:
 	rts
 .endproc
 
+;*****************************************************************
+; randomize: Get a random value from the current SEED values
+;*****************************************************************
+
+.segment "ZEROPAGE"
+
+SEED0: .res 2
+SEED2: .res 2
+
+; simple shift based random number
+.segment "CODE"
+.proc randomize
+	lda SEED0
+	lsr
+	rol SEED0+1
+	bcc @noeor
+	eor #$B4
+@noeor:
+	sta SEED0
+	eor SEED0+1
+	rts
+.endproc
+
+; Linear Frequency random numbers
+; result in a (lo) and y (hi)
+.proc rand
+	jsr rand64k	; Factors of 65536: 3 5 17 257
+	jsr rand32k ; Factors of 32767; 7 31 151
+	lda SEED0+1	; combine other seed values
+	eor SEED2+1
+	tay	; save hi byte
+	lda SEED0	; mix up lowbytes of SEED0
+	eor SEED2	; and SEED2 to combine both
+	rts
+.endproc
+
+.proc rand64k
+	lda SEED0+1
+	asl
+	asl
+	eor SEED0+1
+	asl
+	eor SEED0+1
+	asl
+	asl
+	eor SEED0+1
+	asl
+	rol SEED0	; shift this left, "random" bit comes from low
+	rol SEED0+1
+	rts
+.endproc
+
+.proc rand32k
+	lda SEED2+1
+	asl
+	eor SEED2+1
+	asl
+	asl
+	ror SEED2	; shift this right, random bit comes from high
+	rol SEED2+1
+	rts
+.endproc
+
+;*****************************************************************
+; collision_test: Check whether two objects have hit each other
+; Returns: Carry flag set if objects have hit each other
+;*****************************************************************
+
+.segment "ZEROPAGE"
+
+cx1:	.res 1 ; object 1 X position
+cy1:	.res 1 ; object 1 Y position
+cw1:	.res 1 ; object 1 width
+ch1:	.res 1 ; object 1 height
+
+cx2:	.res 1 ; object 2 X position
+cy2:	.res 1 ; object 2 Y position
+cw2:	.res 1 ; object 2 width
+ch2:	.res 1 ; object 2 height
+
+.segment "CODE"
+
+.proc collision_test
+	clc
+	lda cx1 ; get object 1 x
+	adc cw1 ; add object 1 width
+	cmp cx2 ; is object 2 to the right of object 1 plus it's width?
+	bcc @exit
+	clc
+	lda cx2 ; get object 2 x
+	adc cw2 ; add object 2 width
+	cmp cx1 ; is object 2 to the left of object 1?
+	bcc @exit
+	lda cy1 ; get object 1 y
+	adc ch1 ; add object 1 height
+	cmp cy2 ; is object 2 below object 1 plus it's height?
+	bcc @exit
+	clc
+	lda cy2 ; get object 2 y
+	adc ch2 ; add object 2 height
+	cmp cy1 ; is object 2 above object 1?
+	bcc @exit
+
+	sec ; we have hit, set carry flag and exit
+	rts
+@exit:
+	clc ; clear carry flag and exit
+	rts
+.endproc
+
+;*****************************************************************
+;  0-99 Decimal to digit conversion
+;  A = number to convert
+; Outputs:
+; X = decimal tens
+; A = decimal ones
+;*****************************************************************
+.segment "CODE"
+
+.proc dec99_to_bytes
+    ldx    #0
+    cmp    #50                   ; A = 0-99
+    bcc    try20
+    sbc    #50
+    ldx    #5
+    bne    try20                ; always branch
+
+div20:
+    inx
+    inx
+    sbc    #20
+
+try20:
+    cmp    #20
+    bcs    div20
+
+try10:
+    cmp    #10
+    bcc    @finished
+    sbc    #10
+    inx
+
+@finished:
+	; X = decimal tens
+	; A = decimal ones
+
+	rts
+.endproc
+
+.segment "CODE"
+.proc clear_sprites
+	; place all sprites offscreen at Y=255
+	lda #255
+	ldx #0
+clear_oam:
+	sta oam,x
+	inx
+	inx
+	inx
+	inx
+	bne clear_oam
+
+	rts
+.endproc
