@@ -151,6 +151,7 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 .segment "ZEROPAGE"
 
 gamepad:		.res 1 ; stores the current gamepad values
+gamepad_2:		.res 1 ; stores the current gamepad 2 values
 
 ;*****************************************************************
 ; gamepad_poll: this reads the gamepad state into the variable labelled "gamepad"
@@ -180,6 +181,30 @@ loop:
 	sta gamepad
 	rts
 .endproc
+
+.proc gamepad_poll_2
+	; strobe the gamepad to latch current button state
+	lda #1
+	sta JOYPAD2
+	lda #0
+	sta JOYPAD2
+	; read 8 bytes from the interface at $4016
+	ldx #8
+loop:
+	pha
+	lda JOYPAD2
+	; combine low two bits and store in carry bit
+	and #%00000011
+	cmp #%00000001
+	pla
+	; rotate carry into gamepad variable
+	ror a
+	dex
+	bne loop
+	sta gamepad_2
+	rts
+.endproc
+
 
 ;*****************************************************************
 ; write_text: This writes a section of text to the screen

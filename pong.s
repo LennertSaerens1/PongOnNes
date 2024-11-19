@@ -288,6 +288,117 @@ paletteloop:
 
 
  mainloop:
+ ; skip reading controls if and change has not been drawn
+ 	lda nmi_ready
+ 	cmp #0
+ 	bne mainloop
+ ; read the gamepad
+ 	jsr gamepad_poll
+ 	; now move the bat if left or right pressed
+ 	lda gamepad
+ 	and #PAD_U
+ 	beq NOT_GAMEPAD_UP
+ 		; gamepad has been pressed left
+ 		lda oam+(1*4) ; get current Y
+ 		cmp #0
+ 		beq NOT_GAMEPAD_UP
+		lda oam
+ 		sec
+ 		sbc #2
+ 		sta oam ; change Y to the left
+		lda oam +(1*4)
+		sec
+		sbc #2
+		sta oam +(1*4)
+		lda oam +(2*4)
+		sec
+		sbc #2
+		sta oam +(2*4)
+		lda oam +(3*4)
+		sec
+		sbc #2
+		sta oam +(3*4)
+ NOT_GAMEPAD_UP:
+ 	lda gamepad
+ 	and #PAD_D
+ 	beq NOT_GAMEPAD_DOWN
+ 		; gamepad has been pressed right
+ 		lda oam + (2*4) ; get current Y
+ 		cmp #230
+ 		beq NOT_GAMEPAD_DOWN
+		lda oam
+ 		clc
+ 		adc #2
+ 		sta oam ; change Y to the left
+		lda oam +(1*4)
+		clc
+ 		adc #2
+		sta oam +(1*4)
+		lda oam +(2*4)
+		clc
+ 		adc #2
+		sta oam +(2*4)
+		lda oam +(3*4)
+		clc
+ 		adc #2
+		sta oam +(3*4)
+ NOT_GAMEPAD_DOWN:
+
+ ; read the gamepad
+ 	jsr gamepad_poll_2
+ 	; now move the bat if left or right pressed
+ 	lda gamepad_2
+ 	and #PAD_U
+ 	beq NOT_GAMEPAD_UP_2
+ 		; gamepad has been pressed left
+ 		lda oam+(5*4) ; get current Y
+ 		cmp #0
+ 		beq NOT_GAMEPAD_UP_2
+		lda oam +(4*4)
+ 		sec
+ 		sbc #2
+ 		sta oam +(4*4); change Y to the left
+		lda oam +(5*4)
+		sec
+		sbc #2
+		sta oam +(5*4)
+		lda oam +(6*4)
+		sec
+		sbc #2
+		sta oam +(6*4)
+		lda oam +(7*4)
+		sec
+		sbc #2
+		sta oam +(7*4)
+ NOT_GAMEPAD_UP_2:
+ 	lda gamepad_2
+ 	and #PAD_D
+ 	beq NOT_GAMEPAD_DOWN_2
+ 		; gamepad has been pressed right
+ 		lda oam + (6*4) ; get current Y
+ 		cmp #230
+ 		beq NOT_GAMEPAD_DOWN_2
+		lda oam+(4*4)
+ 		clc
+ 		adc #2
+ 		sta oam +(4*4); change Y to the left
+		lda oam +(5*4)
+		clc
+ 		adc #2
+		sta oam +(5*4)
+		lda oam +(6*4)
+		clc
+ 		adc #2
+		sta oam +(6*4)
+		lda oam +(7*4)
+		clc
+ 		adc #2
+		sta oam +(7*4)
+ NOT_GAMEPAD_DOWN_2:
+
+; ensure our changes are rendered
+ 	lda #1
+ 	sta nmi_ready
  	jmp mainloop
 .endproc
 
