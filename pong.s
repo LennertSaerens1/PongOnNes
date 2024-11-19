@@ -21,7 +21,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 
 .segment "TILES"
-.incbin "pong_cheat.chr"
+.incbin "pong_test.chr"
 
 ;*****************************************************************
 ; Define NES interrupt vectors
@@ -187,6 +187,92 @@ irq:
 
  	; initialize palette table
  	ldx #0
+
+; place our middle bar bat sprite on the screen
+ 	lda #100
+ 	sta oam  ; set Y
+ 	lda #30
+ 	sta oam  + 3 ; set X
+ 	lda #5
+	sta oam + 1
+	lda #1
+	sta oam + 2
+
+	; place our top sprite on the screen
+ 	lda #92
+ 	sta oam +4  ; set Y
+ 	lda #30
+ 	sta oam  +4 + 3 ; set X
+ 	lda #6
+	sta oam + 4 + 1
+	lda #1
+	sta oam + 4 + 2
+
+	; place our bottom sprite on the screen
+ 	lda #116
+ 	sta oam +(2*4)  ; set Y
+ 	lda #30
+ 	sta oam  +(2*4) + 3 ; set X
+ 	lda #6
+	sta oam +(2*4)+ 1
+	lda #%10000001
+	sta oam +(2*4) + 2
+
+	; place our middel bar sprite on the screen
+ 	lda #108
+ 	sta oam +(3*4)  ; set Y
+ 	lda #30
+ 	sta oam  +(3*4) + 3 ; set X
+ 	lda #5
+	sta oam +(3*4)+ 1
+	lda #1
+	sta oam +(3*4) + 2
+
+
+	;Right Sprite
+
+	; place our right middle bat sprite on the screen
+ 	lda #100
+ 	sta oam+(4*4)  ; set Y
+ 	lda # 256 - 30
+ 	sta oam+(4*4)  + 3 ; set X
+ 	lda #5
+	sta oam+(4*4) + 1
+	lda #%01000001
+	sta oam+(4*4) + 2
+
+	; place our right top sprite on the screen
+ 	lda #92
+ 	sta oam + (5*4)  ; set Y
+ 	lda #256 - 30
+ 	sta oam + (5*4) + 3 ; set X
+ 	lda #6
+	sta oam +(5*4) + 1
+	lda #%01000001
+	sta oam + (5*4) + 2
+
+	; place our right bottom sprite on the screen
+ 	lda #116
+ 	sta oam +(6*4)  ; set Y
+ 	lda #256 - 30
+ 	sta oam  +(6*4) + 3 ; set X
+ 	lda #6
+	sta oam +(6*4)+ 1
+	lda #%11000001
+	sta oam +(6*4) + 2
+
+	; place our right middle sprite on the screen
+ 	lda #108
+ 	sta oam +(7*4)  ; set Y
+ 	lda #256 - 30
+ 	sta oam  +(7*4) + 3 ; set X
+ 	lda #5
+	sta oam +(7*4)+ 1
+	lda #%01000001
+	sta oam + (7*4) + 2
+
+
+
 paletteloop:
 	lda default_palette, x
 	sta palette, x
@@ -194,26 +280,12 @@ paletteloop:
 	cpx #32
 	bcc paletteloop
 
- 	; draw the title screen
-	jsr display_title_screen
 
-	; set our game settings
-	lda #VBLANK_NMI|BG_0000|OBJ_1000
-   	sta ppu_ctl0
-   	lda #BG_ON|OBJ_ON
-   	sta ppu_ctl1
 
 	jsr ppu_update
 
-	; wait for a gamepad button to be pressed
-titleloop:
-	jsr gamepad_poll
-	lda gamepad
-	and #PAD_A|PAD_B|PAD_START|PAD_SELECT
-	beq titleloop
 
-	; draw the game screen
-	jsr display_game_screen
+
 
  mainloop:
  	jmp mainloop
@@ -239,36 +311,36 @@ title_attributes:
 .byte %00000101,%00000101,%00000101,%00000101
 .byte %00000101,%00000101,%00000101,%00000101
 
-.proc display_title_screen
-	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
+; .proc display_title_screen
+; 	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
 
-	jsr clear_nametable ; Clear the 1st name table
+; 	jsr clear_nametable ; Clear the 1st name table
 
-	; Write our title text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 6)
-	assign_16i text_address, title_text
-	jsr write_text
+; 	; Write our title text
+; 	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 6)
+; 	assign_16i text_address, title_text
+; 	jsr write_text
 
-	; Write our press play text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 20 * 32 + 6)
-	assign_16i text_address, press_play_text
-	jsr write_text
+; 	; Write our press play text
+; 	vram_set_address (NAME_TABLE_0_ADDRESS + 20 * 32 + 6)
+; 	assign_16i text_address, press_play_text
+; 	jsr write_text
 
-	; Set the title text to use the 2nd palette entries
-	vram_set_address (ATTRIBUTE_TABLE_0_ADDRESS + 8)
-	assign_16i paddr, title_attributes
-	ldy #0
-loop:
-	lda (paddr),y
-	sta PPU_VRAM_IO
-	iny
-	cpy #8
-	bne loop
+; 	; Set the title text to use the 2nd palette entries
+; 	vram_set_address (ATTRIBUTE_TABLE_0_ADDRESS + 8)
+; 	assign_16i paddr, title_attributes
+; 	ldy #0
+; loop:
+; 	lda (paddr),y
+; 	sta PPU_VRAM_IO
+; 	iny
+; 	cpy #8
+; 	bne loop
 
-	jsr ppu_update ; Wait until the screen has been drawn
+; 	jsr ppu_update ; Wait until the screen has been drawn
 
-	rts
-.endproc
+; 	rts
+; .endproc
 
 ;*****************************************************************
 ; Display Main Game Screen
@@ -283,45 +355,45 @@ game_screen_scoreline:
 .byte "SCORE 0000000"
 
 .segment "CODE"
-.proc display_game_screen
-	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
+; .proc display_game_screen
+; 	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
 
-	jsr clear_nametable ; Clear the 1st name table
+; 	jsr clear_nametable ; Clear the 1st name table
 
-	; output mountain line
-	vram_set_address (NAME_TABLE_0_ADDRESS + 22 * 32)
-	assign_16i paddr, game_screen_mountain
-	ldy #0
-loop:
-	lda (paddr),y
-	sta PPU_VRAM_IO
-	iny
-	cpy #32
-	bne loop
+; 	; output mountain line
+; 	vram_set_address (NAME_TABLE_0_ADDRESS + 22 * 32)
+; 	assign_16i paddr, game_screen_mountain
+; 	ldy #0
+; loop:
+; 	lda (paddr),y
+; 	sta PPU_VRAM_IO
+; 	iny
+; 	cpy #32
+; 	bne loop
 
-	; draw a base line
-	vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
-	ldy #0
-	lda #9 ; tile number to repeat
-loop2:
-	sta PPU_VRAM_IO
-	iny
-	cpy #32
-	bne loop2
+; 	; draw a base line
+; 	vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
+; 	ldy #0
+; 	lda #9 ; tile number to repeat
+; loop2:
+; 	sta PPU_VRAM_IO
+; 	iny
+; 	cpy #32
+; 	bne loop2
 
-	; output the score section on the next line
-	assign_16i paddr, game_screen_scoreline
-	ldy #0
-loop3:
-	lda (paddr),y
-	sta PPU_VRAM_IO
-	iny
-	cpy #12
-	bne loop3
+; 	; output the score section on the next line
+; 	assign_16i paddr, game_screen_scoreline
+; 	ldy #0
+; loop3:
+; 	lda (paddr),y
+; 	sta PPU_VRAM_IO
+; 	iny
+; 	cpy #12
+; 	bne loop3
 
-	jsr ppu_update ; Wait until the screen has been drawn
-	rts
-.endproc
+; 	jsr ppu_update ; Wait until the screen has been drawn
+; 	rts
+; .endproc
 
 ;*****************************************************************
 ; Our default palette table has 16 entries for tiles and 16 entries for sprites
