@@ -535,7 +535,7 @@ TOP_HIT:
 	sta d_x
 	jmp end_of_left_collision
  MIDDLE_HIT:
- ;storing top sprite information for collision detection
+ ;storing middle top sprite information for collision detection
 	lda oam + (0*4)+3
 	sta cx2
 
@@ -550,11 +550,11 @@ TOP_HIT:
 	bcc MIDDLE_SECOND_HIT
 	lda #0
 	sta d_y
-	lda #1 ; reverse direction
+	lda #2 ; reverse direction
 	sta d_x
 	jmp end_of_left_collision
 MIDDLE_SECOND_HIT:
-;storing top sprite information for collision detection
+;storing middle bottom sprite information for collision detection
 	lda oam + (3*4)+3
 	sta cx2
 
@@ -569,10 +569,11 @@ MIDDLE_SECOND_HIT:
 	bcc BOTTOM_HIT
 	lda #0
 	sta d_y
-	lda #1 ; reverse direction
+	lda #2 ; reverse direction
 	sta d_x
 	jmp end_of_left_collision
 BOTTOM_HIT:
+;storing bottom sprite information for collision detection
 lda oam + (2*4)+3
 	sta cx2
 
@@ -592,7 +593,7 @@ lda oam + (2*4)+3
 	jmp end_of_left_collision
 end_of_left_collision:
 TOP_HIT_RIGHT:
-	;storing top sprite information for collision detection
+	;storing top right sprite information for collision detection
 	lda oam + (5*4)+3
 	sta cx2
 
@@ -605,13 +606,13 @@ TOP_HIT_RIGHT:
 
 	jsr collision_test
 	bcc MIDDLE_HIT_RIGHT
-	lda #1
+	lda #$FF
 	sta d_y
 	lda #$FF ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
  MIDDLE_HIT_RIGHT:
- ;storing top sprite information for collision detection
+ ;storing middle top righ sprite information for collision detection
 	lda oam + (4*4)+3
 	sta cx2
 
@@ -626,11 +627,11 @@ TOP_HIT_RIGHT:
 	bcc MIDDLE_SECOND_HIT_RIGHT
 	lda #0
 	sta d_y
-	lda #$FF ; reverse direction
+	lda #$FE ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
 MIDDLE_SECOND_HIT_RIGHT:
-;storing top sprite information for collision detection
+;storing middle bottom right sprite information for collision detection
 	lda oam + (7*4)+3
 	sta cx2
 
@@ -645,10 +646,11 @@ MIDDLE_SECOND_HIT_RIGHT:
 	bcc BOTTOM_HIT_RIGHT
 	lda #0
 	sta d_y
-	lda #$FF ; reverse direction
+	lda #$FE ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
 BOTTOM_HIT_RIGHT:
+;storing bottom right sprite information for collision detection
 lda oam + (6*4)+3
 	sta cx2
 
