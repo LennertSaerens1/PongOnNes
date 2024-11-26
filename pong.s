@@ -184,6 +184,7 @@ irq:
 
 ; Score subroutines
 
+
 ;update_display:
  ;   JSR display_scores
   ;  JMP main
@@ -757,11 +758,101 @@ lda oam + (6*4)+3
 	jmp end_of_right_collision
 end_of_right_collision:
 
+ 	lda #5
+	cmp player1_score
+	beq win_screen
+
+	lda #5
+	cmp player2_score
+	beq win_screen
+
  ; ensure our changes are rendered
  	lda #1
  	sta nmi_ready
  	jmp mainloop
 	
+win_screen:
+jsr offscreen_sprites
+win_loop:
+lda 0
+sta player1_score
+sta player2_score
+jsr gamepad_poll
+ 	lda gamepad
+ 	and #PAD_START
+ 	beq NOT_RESET
+		jmp reset
+NOT_RESET:
+
+
+jmp win_loop
+
+offscreen_sprites:
+	lda #255
+ 	sta oam  ; set Y
+ 	sta oam  + 3 ; set X
+
+	; place our top sprite on the screen
+ 	lda #255
+ 	sta oam +4  ; set Y
+ 	sta oam  +4 + 3 ; set X
+
+	; place our bottom sprite on the screen
+ 	lda #255
+ 	sta oam +(2*4)  ; set Y
+ 	sta oam  +(2*4) + 3 ; set X
+
+
+	; place our middel bar sprite on the screen
+ 	lda #255
+ 	sta oam +(3*4)  ; set Y
+ 	sta oam  +(3*4) + 3 ; set X
+
+
+	; place our player sprite on the screen
+ 	lda #255
+ 	sta oam +(10*4)  ; set Y
+ 	sta oam  +(10*4) + 3 ; set X
+
+
+	;Right Sprite
+
+	; place our right middle bat sprite on the screen
+ 	lda #255
+ 	sta oam+(4*4)  ; set Y
+ 	sta oam+(4*4)  + 3 ; set X
+
+
+	; place our right top sprite on the screen
+ 	lda #255
+ 	sta oam + (5*4)  ; set Y
+ 	sta oam + (5*4) + 3 ; set X
+
+
+	; place our right bottom sprite on the screen
+ 	lda #255
+ 	sta oam +(6*4)  ; set Y
+ 	sta oam  +(6*4) + 3 ; set X
+ 
+
+	; place our right middle sprite on the screen
+ 	lda #255
+ 	sta oam +(7*4)  ; set Y
+ 	sta oam  +(7*4) + 3 ; set X
+
+	; place our right player sprite on the screen
+ 	lda #255
+ 	sta oam +(9*4)  ; set Y
+ 	sta oam  +(9*4) + 3 ; set X
+ 
+; place ball sprite on the screen
+
+ 	lda #255
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+
+
+	rts
 .endproc
 
 ;*****************************************************************

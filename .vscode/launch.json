@@ -8,7 +8,7 @@
         {
             "type": "alchemy65",
             "request": "launch",
-            "name": "Debug rom with mesen",
+             "name": "Debug rom with mesen",
             "romPath": "${workspaceFolder}/${fileBasenameNoExtension}.nes",
             "dbgPath": "${workspaceFolder}/${fileBasenameNoExtension}.nes.dbg",
             "program": "c:\\MesenX\\mesen.exe",
