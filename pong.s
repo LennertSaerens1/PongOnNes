@@ -307,6 +307,7 @@ irq:
  	; set the ball velocity
  	lda #1
  	sta d_x
+	lda #0
  	sta d_y
 
 paletteloop:
@@ -325,27 +326,27 @@ paletteloop:
 
  mainloop:
  ; ball animation
-	inc $0e
-	lda $0e
-	cmp #255 ;determens speed of animation
-	bne skip_reset
-	lda #00
-	sta $0e
+	inc $1e
+    lda $1e
+    cmp #255 ;determens speed of animation
+    bne skip_reset
+    lda #00
+    sta $1e
 
-	inc $0f
-	lda $0f
-	cmp #06
-	bne skip_reset
-	lda #03
-	sta $0f
-	skip_reset:
+    inc $1f
+    lda $1f
+    cmp #06
+    bne skip_reset
+    lda #03
+    sta $1f
+    skip_reset:
 
-	lda #124
+    lda #124
 
- 	lda $0f
- 	sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
- 	lda #2
- 	sta oam + (8 * 4) + 2 ; set atttibutes
+     lda $1f
+     sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
+     lda #2
+     sta oam + (8 * 4) + 2 ; set atttibutes
 
  ; skip reading controls if and change has not been drawn
  	lda nmi_ready
@@ -377,6 +378,7 @@ paletteloop:
 		sec
 		sbc #2
 		sta oam +(3*4)
+		lda oam +(10*4)
 		sec
 		sbc #2
 		sta oam +(10*4)
@@ -404,6 +406,7 @@ paletteloop:
 		clc
  		adc #2
 		sta oam +(3*4)
+		lda oam +(10*4)
 		clc
  		adc #2
 		sta oam +(10*4)
@@ -435,6 +438,7 @@ paletteloop:
 		sec
 		sbc #2
 		sta oam +(7*4)
+		lda oam +(9*4)
 		sec
 		sbc #2
 		sta oam +(9*4)
@@ -462,11 +466,20 @@ paletteloop:
 		clc
  		adc #2
 		sta oam +(7*4)
+		lda oam +(9*4)
 		clc
  		adc #2
 		sta oam +(9*4)
  NOT_GAMEPAD_DOWN_2:
 
+	lda oam + (8 * 4) + 0
+	clc
+	adc d_y
+	sta oam + (8 * 4) + 0
+	cmp #0
+	bne NOT_HITTOP
+	lda #1
+	sta d_y
  NOT_HITTOP:
  	lda oam + (8 * 4) + 0
  	cmp #210 ; have we hit the bottom border
@@ -490,7 +503,172 @@ paletteloop:
  		sta d_x
  NOT_HITRIGHT:
 
-; ensure our changes are rendered
+ collision_detection:
+	;storing the ball information for collision detection
+ 	lda oam + (8*4)+3
+	sta cx1
+
+	lda oam + (8*4)
+	sta cy1
+
+	lda #6
+	sta ch1
+	sta cw1
+
+TOP_HIT:
+	;storing top sprite information for collision detection
+	lda oam + (1*4)+3
+	sta cx2
+
+	lda oam + (1*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_HIT
+	lda #$FF
+	sta d_y
+	lda #1 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision
+ MIDDLE_HIT:
+ ;storing top sprite information for collision detection
+	lda oam + (0*4)+3
+	sta cx2
+
+	lda oam + (0*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_SECOND_HIT
+	lda #0
+	sta d_y
+	lda #1 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision
+MIDDLE_SECOND_HIT:
+;storing top sprite information for collision detection
+	lda oam + (3*4)+3
+	sta cx2
+
+	lda oam + (3*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc BOTTOM_HIT
+	lda #0
+	sta d_y
+	lda #1 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision
+BOTTOM_HIT:
+lda oam + (2*4)+3
+	sta cx2
+
+	lda oam + (2*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc end_of_left_collision
+	lda #1
+	sta d_y
+	lda #1 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision
+end_of_left_collision:
+TOP_HIT_RIGHT:
+	;storing top sprite information for collision detection
+	lda oam + (5*4)+3
+	sta cx2
+
+	lda oam + (5*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_HIT_RIGHT
+	lda #1
+	sta d_y
+	lda #$FF ; reverse direction
+	sta d_x
+	jmp end_of_right_collision
+ MIDDLE_HIT_RIGHT:
+ ;storing top sprite information for collision detection
+	lda oam + (4*4)+3
+	sta cx2
+
+	lda oam + (4*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_SECOND_HIT_RIGHT
+	lda #0
+	sta d_y
+	lda #$FF ; reverse direction
+	sta d_x
+	jmp end_of_right_collision
+MIDDLE_SECOND_HIT_RIGHT:
+;storing top sprite information for collision detection
+	lda oam + (7*4)+3
+	sta cx2
+
+	lda oam + (7*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc BOTTOM_HIT_RIGHT
+	lda #0
+	sta d_y
+	lda #$FF ; reverse direction
+	sta d_x
+	jmp end_of_right_collision
+BOTTOM_HIT_RIGHT:
+lda oam + (6*4)+3
+	sta cx2
+
+	lda oam + (6*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc end_of_right_collision
+	lda #1
+	sta d_y
+	lda #$FF ; reverse direction
+	sta d_x
+	jmp end_of_right_collision
+end_of_right_collision:
+
+ ; ensure our changes are rendered
  	lda #1
  	sta nmi_ready
  	jmp mainloop
