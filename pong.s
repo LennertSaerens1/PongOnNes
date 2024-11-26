@@ -331,6 +331,7 @@ paletteloop:
 
  mainloop:
  ; ball animation
+ clc
 	inc $1e
     lda $1e
     cmp #255 ;determens speed of animation
