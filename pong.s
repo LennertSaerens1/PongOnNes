@@ -21,7 +21,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 
 .segment "TILES"
-.incbin "pong_test.chr"
+.incbin "pong_cheat_update.chr"
 
 ;*****************************************************************
 ; Define NES interrupt vectors
@@ -193,9 +193,9 @@ irq:
  	sta oam  ; set Y
  	lda #30
  	sta oam  + 3 ; set X
- 	lda #5
+ 	lda #6
 	sta oam + 1
-	lda #1
+	lda #0
 	sta oam + 2
 
 	; place our top sprite on the screen
@@ -203,9 +203,9 @@ irq:
  	sta oam +4  ; set Y
  	lda #30
  	sta oam  +4 + 3 ; set X
- 	lda #6
+ 	lda #7
 	sta oam + 4 + 1
-	lda #1
+	lda #0
 	sta oam + 4 + 2
 
 	; place our bottom sprite on the screen
@@ -213,9 +213,9 @@ irq:
  	sta oam +(2*4)  ; set Y
  	lda #30
  	sta oam  +(2*4) + 3 ; set X
- 	lda #6
+ 	lda #7
 	sta oam +(2*4)+ 1
-	lda #%10000001
+	lda #%10000000
 	sta oam +(2*4) + 2
 
 	; place our middel bar sprite on the screen
@@ -223,10 +223,20 @@ irq:
  	sta oam +(3*4)  ; set Y
  	lda #30
  	sta oam  +(3*4) + 3 ; set X
- 	lda #5
+ 	lda #6
 	sta oam +(3*4)+ 1
-	lda #1
+	lda #0
 	sta oam +(3*4) + 2
+
+	; place our player sprite on the screen
+ 	lda #108
+ 	sta oam +(10*4)  ; set Y
+ 	lda #23
+ 	sta oam  +(10*4) + 3 ; set X
+ 	lda #1
+	sta oam +(10*4)+ 1
+	lda #0
+	sta oam +(10*4) + 2
 
 
 	;Right Sprite
@@ -236,7 +246,7 @@ irq:
  	sta oam+(4*4)  ; set Y
  	lda # 256 - 30
  	sta oam+(4*4)  + 3 ; set X
- 	lda #5
+ 	lda #6
 	sta oam+(4*4) + 1
 	lda #%01000001
 	sta oam+(4*4) + 2
@@ -246,7 +256,7 @@ irq:
  	sta oam + (5*4)  ; set Y
  	lda #256 - 30
  	sta oam + (5*4) + 3 ; set X
- 	lda #6
+ 	lda #7
 	sta oam +(5*4) + 1
 	lda #%01000001
 	sta oam + (5*4) + 2
@@ -256,7 +266,7 @@ irq:
  	sta oam +(6*4)  ; set Y
  	lda #256 - 30
  	sta oam  +(6*4) + 3 ; set X
- 	lda #6
+ 	lda #7
 	sta oam +(6*4)+ 1
 	lda #%11000001
 	sta oam +(6*4) + 2
@@ -266,18 +276,32 @@ irq:
  	sta oam +(7*4)  ; set Y
  	lda #256 - 30
  	sta oam  +(7*4) + 3 ; set X
- 	lda #5
+ 	lda #6
 	sta oam +(7*4)+ 1
 	lda #%01000001
 	sta oam + (7*4) + 2
+
+	; place our right player sprite on the screen
+ 	lda #108
+ 	sta oam +(9*4)  ; set Y
+ 	lda #256 - 23
+ 	sta oam  +(9*4) + 3 ; set X
+ 	lda #1
+	sta oam +(9*4)+ 1
+	lda #%01000001
+	sta oam + (9*4) + 2
+
+
 
 ; place ball sprite on the screen
  	lda #124
  	sta oam + (8 * 4) ; set Y
  	sta oam + (8 * 4) + 3 ; set X
- 	lda #2
+	lda #03
+	sta $0f
+ 	lda $0f
  	sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
- 	lda #0
+ 	lda #2
  	sta oam + (8 * 4) + 2 ; set atttibutes
 
  	; set the ball velocity
@@ -300,6 +324,29 @@ paletteloop:
 
 
  mainloop:
+ ; ball animation
+	inc $0e
+	lda $0e
+	cmp #255 ;determens speed of animation
+	bne skip_reset
+	lda #00
+	sta $0e
+
+	inc $0f
+	lda $0f
+	cmp #06
+	bne skip_reset
+	lda #03
+	sta $0f
+	skip_reset:
+
+	lda #124
+
+ 	lda $0f
+ 	sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #2
+ 	sta oam + (8 * 4) + 2 ; set atttibutes
+
  ; skip reading controls if and change has not been drawn
  	lda nmi_ready
  	cmp #0
@@ -330,6 +377,9 @@ paletteloop:
 		sec
 		sbc #2
 		sta oam +(3*4)
+		sec
+		sbc #2
+		sta oam +(10*4)
  NOT_GAMEPAD_UP:
  	lda gamepad
  	and #PAD_D
@@ -354,6 +404,9 @@ paletteloop:
 		clc
  		adc #2
 		sta oam +(3*4)
+		clc
+ 		adc #2
+		sta oam +(10*4)
  NOT_GAMEPAD_DOWN:
 
  ; read the gamepad
@@ -382,6 +435,9 @@ paletteloop:
 		sec
 		sbc #2
 		sta oam +(7*4)
+		sec
+		sbc #2
+		sta oam +(9*4)
  NOT_GAMEPAD_UP_2:
  	lda gamepad_2
  	and #PAD_D
@@ -406,6 +462,9 @@ paletteloop:
 		clc
  		adc #2
 		sta oam +(7*4)
+		clc
+ 		adc #2
+		sta oam +(9*4)
  NOT_GAMEPAD_DOWN_2:
 
  NOT_HITTOP:
@@ -554,7 +613,7 @@ default_palette:
 .byte $0F,$19,$29,$39 ; bg1 green
 .byte $0F,$11,$21,$31 ; bg2 blue
 .byte $0F,$00,$10,$30 ; bg3 greyscale
-.byte $0F,$28,$21,$11 ; sp0 player
-.byte $0F,$14,$24,$34 ; sp1 purple
-.byte $0F,$1B,$2B,$3B ; sp2 teal
-.byte $0F,$12,$22,$32 ; sp3 marine
+.byte $0F,$34,$03,$12 ; sp0 player 1
+.byte $0F,$37,$07,$16 ; sp1 player 2
+.byte $0F,$00,$10,$20 ; sp2 ball
+.byte $0F,$12,$22,$32 ; sp3 character
