@@ -182,13 +182,87 @@ wait_vblank2:
 irq:
 	rti
 
+; Score subroutines
+
+;update_display:
+ ;   JSR display_scores
+  ;  JMP main
+
+increment_ScorePlayer1:
+	inc player1_score
+	lda #1
+	sta d_x
+	
+	; set ball 
+ 	lda #124
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+
+ 	; set the ball velocity
+ 	lda #1
+ 	sta d_x
+
+	lda #0
+	sta d_y
+
+	jsr display_scores
+
+	rts
+
+increment_ScorePlayer2:
+	inc player2_score
+	
+	; set ball position to center
+ 	lda #124
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+
+ 	; set the ball velocity
+ 	lda #$ff
+ 	sta d_x
+
+	lda #0
+	sta d_y
+
+	jsr display_scores
+
+	rts
+
+display_scores:
+; Set PPU address to the location where the scores will be displayed
+    LDA #$20
+    STA PPU_VRAM_ADDRESS2
+    LDA #$28
+    STA PPU_VRAM_ADDRESS2
+
+    ; Display player 1's score
+    LDA player1_score
+    JSR display_digit
+
+    ; Move to the next position for player 2's score
+    LDA #$20
+    STA PPU_VRAM_ADDRESS2
+    LDA #$37
+    STA PPU_VRAM_ADDRESS2
+
+    ; Display player 2's score
+    LDA player2_score
+    JSR display_digit
+    RTS
+
+display_digit:
+    ; Convert the score to the corresponding tile number
+    CLC
+    ADC #$20  ; Tile 20 in CHR corresponds to the number 0
+    STA PPU_VRAM_IO
+    RTS
 ;*****************************************************************
 ; Main application logic section includes the game loop
 ;*****************************************************************
  .segment "CODE"
  .proc main
  	; main application - rendering is currently off
-
+	jsr display_scores
  	; initialize palette table
  	ldx #0
 
@@ -329,9 +403,10 @@ paletteloop:
 
 
 
- mainloop:
- ; ball animation
- clc
+ 	mainloop:
+ 	
+ 	; ball animation
+ 	clc
 	inc $1e
     lda $1e
     cmp #255 ;determens speed of animation
@@ -537,8 +612,9 @@ TOP_HIT:
 
 	jsr collision_test
 	bcc MIDDLE_HIT
-	lda #$FF
-	sta d_y
+	;lda #$FF
+	;sta d_y
+	dec d_y
 	lda #1 ; reverse direction
 	sta d_x
 	jmp end_of_left_collision
@@ -594,8 +670,9 @@ lda oam + (2*4)+3
 
 	jsr collision_test
 	bcc end_of_left_collision
-	lda #1
-	sta d_y
+	;lda #1
+	;sta d_y
+	inc d_y
 	lda #1 ; reverse direction
 	sta d_x
 	jmp end_of_left_collision
@@ -614,8 +691,9 @@ TOP_HIT_RIGHT:
 
 	jsr collision_test
 	bcc MIDDLE_HIT_RIGHT
-	lda #$FF
-	sta d_y
+	;lda #$FF
+	;sta d_y
+	dec d_y
 	lda #$FF ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
@@ -671,8 +749,9 @@ lda oam + (6*4)+3
 
 	jsr collision_test
 	bcc end_of_right_collision
-	lda #1
-	sta d_y
+	;lda #1
+	;sta d_y
+	inc d_y
 	lda #$FF ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
@@ -682,42 +761,6 @@ end_of_right_collision:
  	lda #1
  	sta nmi_ready
  	jmp mainloop
-
-; scores
-	increment_ScorePlayer1:
-	inc player1_score
-	lda #1
-	sta d_x
-	
-	; set ball 
- 	lda #124
- 	sta oam + (8 * 4) ; set Y
- 	sta oam + (8 * 4) + 3 ; set X
-
- 	; set the ball velocity
- 	lda #1
- 	sta d_x
-
-	lda #0
-	sta d_y
-	rts
-
-	increment_ScorePlayer2:
-	inc player2_score
-	
-	; set ball position to center
- 	lda #124
- 	sta oam + (8 * 4) ; set Y
- 	sta oam + (8 * 4) + 3 ; set X
-
- 	; set the ball velocity
- 	lda #$ff
- 	sta d_x
-
-	lda #0
-	sta d_y
-
-	rts
 	
 .endproc
 
