@@ -37,6 +37,10 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 
 .segment "ZEROPAGE"
+d_x:	.res 1 ; x velocity of ball
+d_y:	.res 1 ; y velocity of ball
+player1_score: .res 2 ; Score player 1 
+player2_score: .res 2 ; Score player 2
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -294,6 +298,7 @@ irq:
 
 
 ; place ball sprite on the screen
+
  	lda #124
  	sta oam + (8 * 4) ; set Y
  	sta oam + (8 * 4) + 3 ; set X
@@ -493,12 +498,14 @@ paletteloop:
  	sta oam + (8 * 4) + 3
  	cmp #0 ; have we hit the left border
  	bne NOT_HITLEFT
+		jsr increment_ScorePlayer2
  		lda #1 ; reverse direction
  		sta d_x
  NOT_HITLEFT:
  	lda oam + (8 * 4) + 3
  	cmp #248 ; have we hit the right border
  	bne NOT_HITRIGHT
+		jsr increment_ScorePlayer1
  		lda #$FF ; reverse direction (-1)
  		sta d_x
  NOT_HITRIGHT:
@@ -674,16 +681,48 @@ end_of_right_collision:
  	lda #1
  	sta nmi_ready
  	jmp mainloop
+
+; scores
+	increment_ScorePlayer1:
+	inc player1_score
+	lda #1
+	sta d_x
+	
+	; set ball 
+ 	lda #124
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+
+ 	; set the ball velocity
+ 	lda #1
+ 	sta d_x
+
+	lda #0
+	sta d_y
+	rts
+
+	increment_ScorePlayer2:
+	inc player2_score
+	
+	; set ball position to center
+ 	lda #124
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+
+ 	; set the ball velocity
+ 	lda #$ff
+ 	sta d_x
+
+	lda #0
+	sta d_y
+
+	rts
+	
 .endproc
 
 ;*****************************************************************
 ; Display Title Screen
 ;*****************************************************************
-
-.segment "ZEROPAGE"
-
-d_x:			.res 1 ; x velocity of ball
-d_y:			.res 1 ; y velocity of ball
 
 paddr: .res 2 ; 16-bit address pointer
 
