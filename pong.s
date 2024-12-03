@@ -21,7 +21,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 
 .segment "TILES"
-.incbin "pong_cheat_update.chr"
+.incbin "pong_cheat.chr"
 
 ;*****************************************************************
 ; Define NES interrupt vectors
@@ -41,6 +41,25 @@ d_x:	.res 1 ; x velocity of ball
 d_y:	.res 1 ; y velocity of ball
 player1_score: .res 2 ; Score player 1 
 player2_score: .res 2 ; Score player 2
+animbyte: .res 1
+timer: .res 1
+temp: .res 10
+
+sfx_channel: .res 1
+time: .res 2
+lasttime: .res 1
+level: .res 1
+animate: .res 1
+enemycooldown: .res 1
+score: .res 3
+update: .res 1
+highscore: .res 3
+lives: .res 1
+player_dead: .res 1
+flash: .res 1
+shake: .res 1
+enemycount: .res 1
+displaylevel: .res 1
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -55,6 +74,7 @@ oam: .res 256	; sprite OAM data
 
 .include "neslib.s"
 
+
 ;*****************************************************************
 ; Remainder of normal RAM area
 ;*****************************************************************
@@ -67,6 +87,30 @@ palette: .res 32 ; current palette buffer
 ;*****************************************************************
 
 .segment "CODE"
+; FamiStudio config.
+FAMISTUDIO_CFG_EXTERNAL = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT = 1
+FAMISTUDIO_CFG_SFX_SUPPORT = 1
+FAMISTUDIO_CFG_SFX_STREAMS = 2
+FAMISTUDIO_CFG_EQUALIZER = 1
+FAMISTUDIO_USE_VOLUME_TRACK = 1
+FAMISTUDIO_USE_PITCH_TRACK = 1
+FAMISTUDIO_USE_SLIDE_NOTES = 1
+FAMISTUDIO_USE_VIBRATO = 1
+FAMISTUDIO_USE_ARPEGGIO = 1
+FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
+FAMISTUDIO_USE_RELEASE_NOTES = 1
+FAMISTUDIO_DPCM_OFF = $e000
+
+; CA65-specifc config.
+.define FAMISTUDIO_CA65_ZP_SEGMENT ZEROPAGE
+.define FAMISTUDIO_CA65_RAM_SEGMENT BSS
+.define FAMISTUDIO_CA65_CODE_SEGMENT CODE
+
+.include "famistudio_ca65.s"
+
+.include "test.s"
+
 .proc reset
 	sei			; mask interrupts
 	lda #0
@@ -145,6 +189,7 @@ wait_vblank2:
 	; transfer current palette to PPU
 	vram_set_address $3F00
 	ldx #0 ; transfer the 32 bytes to VRAM
+	
 @loop:
 	lda palette, x
 	sta PPU_VRAM_IO
@@ -172,6 +217,30 @@ wait_vblank2:
 	tax
 	pla
 	rti
+.endproc
+
+; Play a sound effect
+; a = sound effect to play
+; sfx_channel = sound effects channel to use
+;*********************************************************/
+.segment "CODE"
+
+.proc play_sfx
+   sta temp+9 ; save sound effect number
+   tya ; save current register values
+   pha
+   txa
+   pha
+
+   lda temp+9 ; get the sound effect number
+   ldx sfx_channel ; choose the channel to play the sound effect on
+   jsr famistudio_sfx_play
+
+   pla ; restore register values
+   tax
+   pla
+   tay
+   rts
 .endproc
 
 ;*****************************************************************
@@ -206,7 +275,7 @@ increment_ScorePlayer1:
 	lda #0
 	sta d_y
 
-	;jsr display_scores
+	jsr update_score
 
 	rts
 
@@ -225,7 +294,7 @@ increment_ScorePlayer2:
 	lda #0
 	sta d_y
 
-	;jsr display_scores
+	jsr update_score
 
 	rts
 
@@ -262,6 +331,15 @@ display_digit:
 ;*****************************************************************
  .segment "CODE"
  .proc main
+ 	lda #1 ; NTSC 
+    ldx #0 
+    ldy #0 
+    jsr famistudio_init
+
+    ldx #.lobyte(sounds) ; set address of sound effects
+    ldy #.hibyte(sounds)
+    jsr famistudio_sfx_init
+
  	; main application - rendering is currently off
 	jsr display_scores
  	; initialize palette table
@@ -378,8 +456,6 @@ display_digit:
  	sta oam + (8 * 4) ; set Y
  	sta oam + (8 * 4) + 3 ; set X
 	lda #03
-	sta $0f
- 	lda $0f
  	sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
  	lda #2
  	sta oam + (8 * 4) + 2 ; set atttibutes
@@ -389,6 +465,218 @@ display_digit:
  	sta d_x
 	lda #0
  	sta d_y
+
+;place spectator sprite on screen;
+	lda #215
+ 	sta oam + (11 * 4) ; set Y
+	lda #100
+ 	sta oam + (11 * 4) + 3 ; set X
+	lda #43
+ 	sta oam + (11 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (11 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (12 * 4) ; set Y
+	lda #125
+ 	sta oam + (12 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (12 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (12 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (13 * 4) ; set Y
+	lda #150
+ 	sta oam + (13 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (13 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (13 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (14 * 4) ; set Y
+	lda #175
+ 	sta oam + (14 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (14 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (14 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (15 * 4) ; set Y
+	lda #75
+ 	sta oam + (15 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (15 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (15 * 4) + 2 ; set atttibutes
+
+
+	lda #215
+ 	sta oam + (17 * 4) ; set Y
+	lda #50
+ 	sta oam + (17 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (17 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (17 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (18 * 4) ; set Y
+	lda #200
+ 	sta oam + (18 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (18 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (18 * 4) + 2 ; set atttibutes
+
+	;bottom row of spectators
+
+	lda #232
+ 	sta oam + (19 * 4) ; set Y
+	lda #100
+ 	sta oam + (19 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (19 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (19 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (20 * 4) ; set Y
+	lda #125
+ 	sta oam + (20 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (20 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (20* 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (21 * 4) ; set Y
+	lda #150
+ 	sta oam + (21 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (21 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (21 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (22 * 4) ; set Y
+	lda #175
+ 	sta oam + (22* 4) + 3 ; set X
+	lda #1
+ 	sta oam + (22 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (22 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (23 * 4) ; set Y
+	lda #75
+ 	sta oam + (23 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (23 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (23 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (23 * 4) ; set Y
+	lda #75
+ 	sta oam + (23 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (23 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (23 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (24 * 4) ; set Y
+	lda #50
+ 	sta oam + (24 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (24 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (24 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (25 * 4) ; set Y
+	lda #200
+ 	sta oam + (25 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (25 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (25 * 4) + 2 ; set atttibutes
+
+;Place second row of spectators
+	lda #224
+ 	sta oam + (26 * 4) ; set Y
+	lda #37
+ 	sta oam + (26 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (26 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (26 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (27 * 4) ; set Y
+	lda #87
+ 	sta oam + (27 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (27 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (27 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (28 * 4) ; set Y
+	lda #137
+ 	sta oam + (28 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (28 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (28 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (29 * 4) ; set Y
+	lda #187
+ 	sta oam + (29 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (29 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (29 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (30 * 4) ; set Y
+	lda #62
+ 	sta oam + (30 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (30 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (30 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (31 * 4) ; set Y
+	lda #112
+ 	sta oam + (31 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (31 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (31 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (32 * 4) ; set Y
+	lda #162
+ 	sta oam + (32 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (32 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (32 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (33 * 4) ; set Y
+	lda #212
+ 	sta oam + (33 * 4) + 3 ; set X
+	lda #43
+ 	sta oam + (33 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (33 * 4) + 2 ; set atttibutes
 
 paletteloop:
 	lda default_palette, x
@@ -405,24 +693,24 @@ jsr display_game_screen
  	
  	; ball animation
  	clc
-	inc $1e
-    lda $1e
+	inc timer
+    lda timer
     cmp #255 ;determens speed of animation
     bne skip_reset
     lda #00
-    sta $1e
+    sta timer
 
-    inc $1f
-    lda $1f
+    inc animbyte
+    lda animbyte
     cmp #06
     bne skip_reset
     lda #03
-    sta $1f
+    sta animbyte
     skip_reset:
 
     lda #124
 
-     lda $1f
+     lda animbyte
      sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
      lda #2
      sta oam + (8 * 4) + 2 ; set atttibutes
@@ -557,8 +845,8 @@ jsr display_game_screen
 	sta oam + (8 * 4) + 0
 	cmp #32
 	bne NOT_HITTOP
-	lda #1
-	sta d_y
+		lda #1
+		sta d_y
  NOT_HITTOP:
  	lda oam + (8 * 4) + 0
  	cmp #200 ; have we hit the bottom border
@@ -610,12 +898,22 @@ TOP_HIT:
 
 	jsr collision_test
 	bcc MIDDLE_HIT
-	;lda #$FF
-	;sta d_y
-	dec d_y
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
+	lda #$FF
+	sta d_y
+	;dec d_y
 	lda #1 ; reverse direction
 	sta d_x
 	jmp end_of_left_collision
+
+
  MIDDLE_HIT:
  ;storing middle top sprite information for collision detection
 	lda oam + (0*4)+3
@@ -630,6 +928,14 @@ TOP_HIT:
 
 	jsr collision_test
 	bcc MIDDLE_SECOND_HIT
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
 	lda #0
 	sta d_y
 	lda #2 ; reverse direction
@@ -649,6 +955,14 @@ MIDDLE_SECOND_HIT:
 
 	jsr collision_test
 	bcc BOTTOM_HIT
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
 	lda #0
 	sta d_y
 	lda #2 ; reverse direction
@@ -668,12 +982,22 @@ lda oam + (2*4)+3
 
 	jsr collision_test
 	bcc end_of_left_collision
-	;lda #1
-	;sta d_y
-	inc d_y
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
+	lda #1
+	sta d_y
+	;inc d_y
 	lda #1 ; reverse direction
 	sta d_x
 	jmp end_of_left_collision
+
+
 end_of_left_collision:
 TOP_HIT_RIGHT:
 	;storing top right sprite information for collision detection
@@ -689,9 +1013,17 @@ TOP_HIT_RIGHT:
 
 	jsr collision_test
 	bcc MIDDLE_HIT_RIGHT
-	;lda #$FF
-	;sta d_y
-	dec d_y
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
+	lda #$FF
+	sta d_y
+	;dec d_y
 	lda #$FF ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
@@ -709,6 +1041,14 @@ TOP_HIT_RIGHT:
 
 	jsr collision_test
 	bcc MIDDLE_SECOND_HIT_RIGHT
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
 	lda #0
 	sta d_y
 	lda #$FE ; reverse direction
@@ -728,6 +1068,14 @@ MIDDLE_SECOND_HIT_RIGHT:
 
 	jsr collision_test
 	bcc BOTTOM_HIT_RIGHT
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
 	lda #0
 	sta d_y
 	lda #$FE ; reverse direction
@@ -747,13 +1095,96 @@ lda oam + (6*4)+3
 
 	jsr collision_test
 	bcc end_of_right_collision
-	;lda #1
-	;sta d_y
-	inc d_y
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
+	lda #1
+	sta d_y
+	;inc d_y
 	lda #$FF ; reverse direction
 	sta d_x
 	jmp end_of_right_collision
 end_of_right_collision:
+
+
+spectator_look_at:
+	lda oam + (8 * 4) + 3
+	cmp #122
+	bpl looking_right
+
+	;lda d_x
+	;cmp #1
+	;beq looking_right
+	;lda d_x
+	;cmp #1
+	;beq looking_right
+	
+looking_left:
+
+
+	lda #%01000000
+	sta oam + (11*4) + 2
+	sta oam + (12*4) + 2
+	sta oam + (13*4) + 2
+	sta oam + (14*4) + 2
+	sta oam + (15*4) + 2
+	sta oam + (16*4) + 2
+	sta oam + (17*4) + 2
+	sta oam + (18*4) + 2
+	sta oam + (26*4) + 2
+	sta oam + (27*4) + 2
+	sta oam + (28*4) + 2
+	sta oam + (29*4) + 2
+	lda #%01000001
+	sta oam + (19*4) + 2
+	sta oam + (20*4) + 2
+	sta oam + (21*4) + 2
+	sta oam + (22*4) + 2
+	sta oam + (23*4) + 2
+	sta oam + (24*4) + 2
+	sta oam + (25*4) + 2
+	sta oam + (30*4) + 2
+	sta oam + (31*4) + 2
+	sta oam + (32*4) + 2
+	sta oam + (33*4) + 2
+
+	jmp end_of_look
+
+	
+looking_right:
+	lda #%00000000
+	sta oam + (11*4) + 2
+	sta oam + (12*4) + 2
+	sta oam + (13*4) + 2
+	sta oam + (14*4) + 2
+	sta oam + (15*4) + 2
+	sta oam + (16*4) + 2
+	sta oam + (17*4) + 2
+	sta oam + (18*4) + 2
+	sta oam + (26*4) + 2
+	sta oam + (27*4) + 2
+	sta oam + (28*4) + 2
+	sta oam + (29*4) + 2
+
+	lda #%00000001
+	sta oam + (19*4) + 2
+	sta oam + (20*4) + 2
+	sta oam + (21*4) + 2
+	sta oam + (22*4) + 2
+	sta oam + (23*4) + 2
+	sta oam + (24*4) + 2
+	sta oam + (25*4) + 2
+	sta oam + (30*4) + 2
+	sta oam + (31*4) + 2
+	sta oam + (32*4) + 2
+	sta oam + (33*4) + 2
+	
+end_of_look:
 
  	lda #5
 	cmp player1_score
@@ -763,7 +1194,6 @@ end_of_right_collision:
 	cmp player2_score
 	beq win_screen
 
-	;jsr update_score
 
  ; ensure our changes are rendered
  	lda #1
@@ -783,6 +1213,7 @@ jsr gamepad_poll
 		jmp reset
 NOT_RESET:
 
+jsr famistudio_update
 
 jmp win_loop
 
@@ -928,56 +1359,72 @@ game_screen_scoreline:
  .proc display_game_screen
 jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
 
- 	jsr clear_nametable ; Clear the 1st name table
+     jsr clear_nametable ; Clear the 1st name table
 
-; 	; output mountain line
-; 	vram_set_address (NAME_TABLE_0_ADDRESS + 22 * 32)
-; 	assign_16i paddr, game_screen_mountain
-; 	ldy #0
-; loop:
-; 	lda (paddr),y
-; 	sta PPU_VRAM_IO
-; 	iny
-; 	cpy #32
-; 	bne loop
-
-	;JSR draw_court
-	;JSR display_scores
-; draw a base line
- 	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
-	ldy #0
-	lda #9 ; tile number to repeat
+; draw court
+     vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+    ldy #0
+    lda #$0C ; tile number to repeat
  loop2:
- 	sta PPU_VRAM_IO
-	iny
- 	cpy #32
- 	bne loop2
+     sta PPU_VRAM_IO
+    iny
+     cpy #32
+     bne loop2
 
-	vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
-	ldy #0
-	lda #9 ; tile number to repeat
+    vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
+    ldy #0
+    lda #$0E ; tile number to repeat
  loop3:
- 	sta PPU_VRAM_IO
-	iny
- 	cpy #32
- 	bne loop3
+     sta PPU_VRAM_IO
+    iny
+     cpy #32
+     bne loop3
 
-	jsr display_scores
 
-; 	; output the score section on the next line
-; 	assign_16i paddr, game_screen_scoreline
-; 	ldy #0
-; loop3:
-; 	lda (paddr),y
-; 	sta PPU_VRAM_IO
-; 	iny
-; 	cpy #12
-; 	bne loop3
 
-	;jsr draw_court
+    vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32)
+    ldy #0
+    lda #$10 ; tile number to repeat
+    sta PPU_VRAM_IO
+    vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+    ldy #0
+    lda #$10 ; tile number to repeat
+    sta PPU_VRAM_IO
+    vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32)
+    ldy #0
+    lda #$10 ; tile number to repeat
+    sta PPU_VRAM_IO
 
- 	jsr ppu_update ; Wait until the screen has been drawn
- 	rts
+
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+    ldy #0
+    lda #$08 ; tile number to repeat
+    sta PPU_VRAM_IO
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 -1)
+    ldy #0
+    lda #$0B ; tile number to repeat
+    sta PPU_VRAM_IO
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
+    ldy #0
+    lda #$09 ; tile number to repeat
+    sta PPU_VRAM_IO
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 27 * 32 -1)
+    ldy #0
+    lda #$0A ; tile number to repeat
+    sta PPU_VRAM_IO
+
+
+
+    jsr display_scores
+
+    ;jsr draw_court
+
+     jsr ppu_update ; Wait until the screen has been drawn
+     rts
  .endproc
 
 ;*****************************************************************
