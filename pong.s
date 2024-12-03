@@ -45,7 +45,6 @@ animbyte: .res 1
 timer: .res 1
 temp: .res 10
 
-sfx_channel: .res 1
 time: .res 2
 lasttime: .res 1
 level: .res 1
@@ -74,18 +73,9 @@ oam: .res 256	; sprite OAM data
 
 .include "neslib.s"
 
-
-;*****************************************************************
-; Remainder of normal RAM area
-;*****************************************************************
-
-.segment "BSS"
-palette: .res 32 ; current palette buffer
-
-;*****************************************************************
-; Main application entry point for starup/reset
-;*****************************************************************
-
+;**************************************************************
+; Include Sound Engine and Sound Effects Data
+;**************************************************************
 .segment "CODE"
 ; FamiStudio config.
 FAMISTUDIO_CFG_EXTERNAL = 1
@@ -111,6 +101,22 @@ FAMISTUDIO_DPCM_OFF = $e000
 
 .include "test.s"
 
+.segment "ZEROPAGE"
+
+sfx_channel: .res 1
+
+;*****************************************************************
+; Remainder of normal RAM area
+;*****************************************************************
+
+.segment "BSS"
+palette: .res 32 ; current palette buffer
+
+;*****************************************************************
+; Main application entry point for starup/reset
+;*****************************************************************
+
+.segment "CODE"
 .proc reset
 	sei			; mask interrupts
 	lda #0
