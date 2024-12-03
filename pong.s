@@ -352,7 +352,7 @@ display_digit:
  	ldx #0
 
 ; place our middle bar bat sprite on the screen
- 	lda #100
+ 	lda #118
  	sta oam  ; set Y
  	lda #30
  	sta oam  + 3 ; set X
@@ -362,7 +362,7 @@ display_digit:
 	sta oam + 2
 
 	; place our top sprite on the screen
- 	lda #92
+ 	lda #110
  	sta oam +4  ; set Y
  	lda #30
  	sta oam  +4 + 3 ; set X
@@ -372,7 +372,7 @@ display_digit:
 	sta oam + 4 + 2
 
 	; place our bottom sprite on the screen
- 	lda #116
+ 	lda #134
  	sta oam +(2*4)  ; set Y
  	lda #30
  	sta oam  +(2*4) + 3 ; set X
@@ -382,7 +382,7 @@ display_digit:
 	sta oam +(2*4) + 2
 
 	; place our middel bar sprite on the screen
- 	lda #108
+ 	lda #126
  	sta oam +(3*4)  ; set Y
  	lda #30
  	sta oam  +(3*4) + 3 ; set X
@@ -392,7 +392,7 @@ display_digit:
 	sta oam +(3*4) + 2
 
 	; place our player sprite on the screen
- 	lda #108
+ 	lda #126
  	sta oam +(10*4)  ; set Y
  	lda #23
  	sta oam  +(10*4) + 3 ; set X
@@ -405,7 +405,7 @@ display_digit:
 	;Right Sprite
 
 	; place our right middle bat sprite on the screen
- 	lda #100
+ 	lda #118
  	sta oam+(4*4)  ; set Y
  	lda # 256 - 30
  	sta oam+(4*4)  + 3 ; set X
@@ -415,7 +415,7 @@ display_digit:
 	sta oam+(4*4) + 2
 
 	; place our right top sprite on the screen
- 	lda #92
+ 	lda #110
  	sta oam + (5*4)  ; set Y
  	lda #256 - 30
  	sta oam + (5*4) + 3 ; set X
@@ -425,7 +425,7 @@ display_digit:
 	sta oam + (5*4) + 2
 
 	; place our right bottom sprite on the screen
- 	lda #116
+ 	lda #134
  	sta oam +(6*4)  ; set Y
  	lda #256 - 30
  	sta oam  +(6*4) + 3 ; set X
@@ -435,7 +435,7 @@ display_digit:
 	sta oam +(6*4) + 2
 
 	; place our right middle sprite on the screen
- 	lda #108
+ 	lda #126
  	sta oam +(7*4)  ; set Y
  	lda #256 - 30
  	sta oam  +(7*4) + 3 ; set X
@@ -445,7 +445,7 @@ display_digit:
 	sta oam + (7*4) + 2
 
 	; place our right player sprite on the screen
- 	lda #108
+ 	lda #126
  	sta oam +(9*4)  ; set Y
  	lda #256 - 23
  	sta oam  +(9*4) + 3 ; set X
@@ -733,7 +733,7 @@ jsr display_game_screen
  	beq NOT_GAMEPAD_UP
  		; gamepad has been pressed left
  		lda oam+(1*4) ; get current Y
- 		cmp #32
+ 		cmp #24
  		beq NOT_GAMEPAD_UP
 		lda oam
  		sec
@@ -761,7 +761,7 @@ jsr display_game_screen
  	beq NOT_GAMEPAD_DOWN
  		; gamepad has been pressed right
  		lda oam + (2*4) ; get current Y
- 		cmp #206
+ 		cmp #198
  		beq NOT_GAMEPAD_DOWN
 		lda oam
  		clc
@@ -793,7 +793,7 @@ jsr display_game_screen
  	beq NOT_GAMEPAD_UP_2
  		; gamepad has been pressed left
  		lda oam+(5*4) ; get current Y
- 		cmp #32
+ 		cmp #24
  		beq NOT_GAMEPAD_UP_2
 		lda oam +(4*4)
  		sec
@@ -821,7 +821,7 @@ jsr display_game_screen
  	beq NOT_GAMEPAD_DOWN_2
  		; gamepad has been pressed right
  		lda oam + (6*4) ; get current Y
- 		cmp #206
+ 		cmp #198
  		beq NOT_GAMEPAD_DOWN_2
 		lda oam+(4*4)
  		clc
@@ -849,13 +849,13 @@ jsr display_game_screen
 	clc
 	adc d_y
 	sta oam + (8 * 4) + 0
-	cmp #32
+	cmp #24
 	bne NOT_HITTOP
 		lda #1
 		sta d_y
  NOT_HITTOP:
  	lda oam + (8 * 4) + 0
- 	cmp #206 ; have we hit the bottom border
+ 	cmp #198 ; have we hit the bottom border
  	bne NOT_HITBOTTOM
  		lda #$FF ; reverse direction (-1)
  		sta d_y
@@ -1367,72 +1367,348 @@ game_screen_scoreline:
  .proc display_game_screen
 jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
 
-     jsr clear_nametable ; Clear the 1st name table
+ 	jsr clear_nametable ; Clear the 1st name table
 
-; draw court
-     vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
-    ldy #0
-    lda #$0C ; tile number to repeat
+	; draw court
+
+	; Top & Bottom
+ 	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32)
+	ldy #0
+	lda #$14 ; tile number to repeat
  loop2:
-     sta PPU_VRAM_IO
-    iny
-     cpy #32
-     bne loop2
+ 	sta PPU_VRAM_IO
+	iny
+ 	cpy #32
+ 	bne loop2
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
-    ldy #0
-    lda #$0E ; tile number to repeat
+	vram_set_address (NAME_TABLE_0_ADDRESS + 25 * 32)
+	ldy #0
+	lda #$15 ; tile number to repeat
  loop3:
-     sta PPU_VRAM_IO
-    iny
-     cpy #32
-     bne loop3
+ 	sta PPU_VRAM_IO
+	iny
+ 	cpy #32
+ 	bne loop3
 
 
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32)
-    ldy #0
-    lda #$10 ; tile number to repeat
-    sta PPU_VRAM_IO
-    vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
-    ldy #0
-    lda #$10 ; tile number to repeat
-    sta PPU_VRAM_IO
-    vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32)
-    ldy #0
-    lda #$10 ; tile number to repeat
-    sta PPU_VRAM_IO
+	; Left & Right
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 8 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 9 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 10 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 11 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 14 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 15 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 16 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 17 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 18 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 19 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 20 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 21 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 22 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 23 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 24 * 32)
+	ldy #0
+	lda #$12 ; tile number to repeat
+	sta PPU_VRAM_IO
+	; vram_set_address (NAME_TABLE_0_ADDRESS + 25 * 32)
+	; ldy #0
+	; lda #$12 ; tile number to repeat
+	; sta PPU_VRAM_IO
 
 
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 8 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 9 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 10 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 11 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 14 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 15 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 16 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 17 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 18 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 19 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 20 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 21 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 22 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 23 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 24 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 25 * 32 - 1)
+	ldy #0
+	lda #$13 ; tile number to repeat
+	sta PPU_VRAM_IO
+	; vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32 - 1)
+	; ldy #0
+	; lda #$13 ; tile number to repeat
+	; sta PPU_VRAM_IO
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
-    ldy #0
-    lda #$08 ; tile number to repeat
-    sta PPU_VRAM_IO
+	; draw corners
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32)
+	ldy #0
+	lda #$08 ; tile number to repeat
+	sta PPU_VRAM_IO
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 -1)
-    ldy #0
-    lda #$0B ; tile number to repeat
-    sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 -1)
+	ldy #0
+	lda #$0B ; tile number to repeat
+	sta PPU_VRAM_IO
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
-    ldy #0
-    lda #$09 ; tile number to repeat
-    sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 25 * 32)
+	ldy #0
+	lda #$09 ; tile number to repeat
+	sta PPU_VRAM_IO
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 27 * 32 -1)
-    ldy #0
-    lda #$0A ; tile number to repeat
-    sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32 -1)
+	ldy #0
+	lda #$0A ; tile number to repeat
+	sta PPU_VRAM_IO
 
 
+	; center
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 15)
+	ldy #0
+	lda #$0C ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 16)
+	ldy #0
+	lda #$0D ; tile number to repeat
+	sta PPU_VRAM_IO
 
-    jsr display_scores
+	vram_set_address (NAME_TABLE_0_ADDRESS + 25 * 32 + 15)
+	ldy #0
+	lda #$0E ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 25 * 32 + 16)
+	ldy #0
+	lda #$0F ; tile number to repeat
+	sta PPU_VRAM_IO
 
-    ;jsr draw_court
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
 
-     jsr ppu_update ; Wait until the screen has been drawn
-     rts
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 9 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 9 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 11 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 11 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 15 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 15 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 17 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 17 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 19 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 19 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 21 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 21 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 23 * 32 + 15)
+	ldy #0
+	lda #$10 ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 23 * 32 + 16)
+	ldy #0
+	lda #$11 ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	jsr display_scores
+
+	;jsr draw_court
+
+ 	jsr ppu_update ; Wait until the screen has been drawn
+ 	rts
  .endproc
 
 ;*****************************************************************
