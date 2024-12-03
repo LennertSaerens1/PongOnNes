@@ -761,7 +761,7 @@ jsr display_game_screen
  	beq NOT_GAMEPAD_DOWN
  		; gamepad has been pressed right
  		lda oam + (2*4) ; get current Y
- 		cmp #200
+ 		cmp #206
  		beq NOT_GAMEPAD_DOWN
 		lda oam
  		clc
@@ -821,7 +821,7 @@ jsr display_game_screen
  	beq NOT_GAMEPAD_DOWN_2
  		; gamepad has been pressed right
  		lda oam + (6*4) ; get current Y
- 		cmp #200
+ 		cmp #206
  		beq NOT_GAMEPAD_DOWN_2
 		lda oam+(4*4)
  		clc
@@ -855,7 +855,7 @@ jsr display_game_screen
 		sta d_y
  NOT_HITTOP:
  	lda oam + (8 * 4) + 0
- 	cmp #200 ; have we hit the bottom border
+ 	cmp #206 ; have we hit the bottom border
  	bne NOT_HITBOTTOM
  		lda #$FF ; reverse direction (-1)
  		sta d_y
@@ -903,6 +903,7 @@ TOP_HIT:
 	sta cw2
 
 	jsr collision_test
+
 	bcc MIDDLE_HIT
 
 	;sound play
@@ -1200,6 +1201,7 @@ end_of_look:
 	cmp player2_score
 	beq win_screen
 
+	jsr famistudio_update
 
  ; ensure our changes are rendered
  	lda #1
