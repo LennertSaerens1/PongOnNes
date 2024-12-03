@@ -206,7 +206,7 @@ increment_ScorePlayer1:
 	lda #0
 	sta d_y
 
-	jsr display_scores
+	;jsr display_scores
 
 	rts
 
@@ -225,7 +225,7 @@ increment_ScorePlayer2:
 	lda #0
 	sta d_y
 
-	jsr display_scores
+	;jsr display_scores
 
 	rts
 
@@ -396,12 +396,9 @@ paletteloop:
 	inx
 	cpx #32
 	bcc paletteloop
-
-
-
 	jsr ppu_update
 
-
+jsr display_game_screen
 
 
  	mainloop:
@@ -442,7 +439,7 @@ paletteloop:
  	beq NOT_GAMEPAD_UP
  		; gamepad has been pressed left
  		lda oam+(1*4) ; get current Y
- 		cmp #0
+ 		cmp #32
  		beq NOT_GAMEPAD_UP
 		lda oam
  		sec
@@ -470,7 +467,7 @@ paletteloop:
  	beq NOT_GAMEPAD_DOWN
  		; gamepad has been pressed right
  		lda oam + (2*4) ; get current Y
- 		cmp #230
+ 		cmp #200
  		beq NOT_GAMEPAD_DOWN
 		lda oam
  		clc
@@ -502,7 +499,7 @@ paletteloop:
  	beq NOT_GAMEPAD_UP_2
  		; gamepad has been pressed left
  		lda oam+(5*4) ; get current Y
- 		cmp #0
+ 		cmp #32
  		beq NOT_GAMEPAD_UP_2
 		lda oam +(4*4)
  		sec
@@ -530,7 +527,7 @@ paletteloop:
  	beq NOT_GAMEPAD_DOWN_2
  		; gamepad has been pressed right
  		lda oam + (6*4) ; get current Y
- 		cmp #230
+ 		cmp #200
  		beq NOT_GAMEPAD_DOWN_2
 		lda oam+(4*4)
  		clc
@@ -558,13 +555,13 @@ paletteloop:
 	clc
 	adc d_y
 	sta oam + (8 * 4) + 0
-	cmp #0
+	cmp #32
 	bne NOT_HITTOP
 	lda #1
 	sta d_y
  NOT_HITTOP:
  	lda oam + (8 * 4) + 0
- 	cmp #210 ; have we hit the bottom border
+ 	cmp #200 ; have we hit the bottom border
  	bne NOT_HITBOTTOM
  		lda #$FF ; reverse direction (-1)
  		sta d_y
@@ -766,6 +763,8 @@ end_of_right_collision:
 	cmp player2_score
 	beq win_screen
 
+	;jsr update_score
+
  ; ensure our changes are rendered
  	lda #1
  	sta nmi_ready
@@ -869,9 +868,18 @@ title_text:
 press_play_text:
 .byte "PRESS FIRE TO BEGIN",0
 
-title_attributes:
+title_attrites:
 .byte %00000101,%00000101,%00000101,%00000101
 .byte %00000101,%00000101,%00000101,%00000101
+
+ .proc update_score
+ 	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
+
+	jsr display_scores
+
+	jsr ppu_update
+ 	rts
+ .endproc
 
 ; .proc display_title_screen
 ; 	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
@@ -917,10 +925,10 @@ game_screen_scoreline:
 .byte "SCORE 0000000"
 
 .segment "CODE"
-; .proc display_game_screen
-; 	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
+ .proc display_game_screen
+jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
 
-; 	jsr clear_nametable ; Clear the 1st name table
+ 	jsr clear_nametable ; Clear the 1st name table
 
 ; 	; output mountain line
 ; 	vram_set_address (NAME_TABLE_0_ADDRESS + 22 * 32)
@@ -933,15 +941,28 @@ game_screen_scoreline:
 ; 	cpy #32
 ; 	bne loop
 
-; 	; draw a base line
-; 	vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
-; 	ldy #0
-; 	lda #9 ; tile number to repeat
-; loop2:
-; 	sta PPU_VRAM_IO
-; 	iny
-; 	cpy #32
-; 	bne loop2
+	;JSR draw_court
+	;JSR display_scores
+; draw a base line
+ 	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	ldy #0
+	lda #9 ; tile number to repeat
+ loop2:
+ 	sta PPU_VRAM_IO
+	iny
+ 	cpy #32
+ 	bne loop2
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 26 * 32)
+	ldy #0
+	lda #9 ; tile number to repeat
+ loop3:
+ 	sta PPU_VRAM_IO
+	iny
+ 	cpy #32
+ 	bne loop3
+
+	jsr display_scores
 
 ; 	; output the score section on the next line
 ; 	assign_16i paddr, game_screen_scoreline
@@ -953,9 +974,11 @@ game_screen_scoreline:
 ; 	cpy #12
 ; 	bne loop3
 
-; 	jsr ppu_update ; Wait until the screen has been drawn
-; 	rts
-; .endproc
+	;jsr draw_court
+
+ 	jsr ppu_update ; Wait until the screen has been drawn
+ 	rts
+ .endproc
 
 ;*****************************************************************
 ; Our default palette table has 16 entries for tiles and 16 entries for sprites
