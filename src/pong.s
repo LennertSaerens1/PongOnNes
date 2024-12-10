@@ -351,6 +351,69 @@ display_digit:
  	; initialize palette table
  	ldx #0
 
+
+
+paletteloop:
+	lda default_palette, x
+	sta palette, x
+	inx
+	cpx #32
+	bcc paletteloop
+	jsr ppu_update
+
+
+	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
+ 	jsr clear_nametable ; Clear the 1st name table
+
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	ldy #0
+	lda #$3B ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32)
+	ldy #0
+	lda #$3B ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+	ldy #0
+	lda #$3B ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32)
+	ldy #0
+	lda #$3B ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 + 10)
+	ldy #0
+	lda #$3A ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32 + 10)
+	ldy #0
+	lda #$3A ; tile number to repeat
+	sta PPU_VRAM_IO
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 10)
+	ldy #0
+	lda #$3A ; tile number to repeat
+	sta PPU_VRAM_IO
+
+	jsr ppu_update	
+
+title_screen:
+
+jsr gamepad_poll
+ 	lda gamepad
+ 	and #PAD_A
+ 	beq NOT_A
+		jmp multi_setup
+NOT_A:
+	lda gamepad
+ 	and #PAD_B
+ 	beq NOT_START
+		jmp single_setup
+NOT_START:
+
+jmp title_screen
+
+single_setup:
+jsr display_game_screen
 ; place our middle bar bat sprite on the screen
  	lda #118
  	sta oam  ; set Y
@@ -683,36 +746,345 @@ display_digit:
  	sta oam + (33 * 4) + 1 ; set patter + (1 * 4)n
  	lda #%00000001
  	sta oam + (33 * 4) + 2 ; set atttibutes
+jmp mainloop_single
 
-paletteloop:
-	lda default_palette, x
-	sta palette, x
-	inx
-	cpx #32
-	bcc paletteloop
-	jsr ppu_update
-
+multi_setup:
 jsr display_game_screen
+; place our middle bar bat sprite on the screen
+ 	lda #118
+ 	sta oam  ; set Y
+ 	lda #30
+ 	sta oam  + 3 ; set X
+ 	lda #6
+	sta oam + 1
+	lda #0
+	sta oam + 2
 
-title_screen:
+	; place our top sprite on the screen
+ 	lda #110
+ 	sta oam +4  ; set Y
+ 	lda #30
+ 	sta oam  +4 + 3 ; set X
+ 	lda #7
+	sta oam + 4 + 1
+	lda #0
+	sta oam + 4 + 2
+
+	; place our bottom sprite on the screen
+ 	lda #134
+ 	sta oam +(2*4)  ; set Y
+ 	lda #30
+ 	sta oam  +(2*4) + 3 ; set X
+ 	lda #7
+	sta oam +(2*4)+ 1
+	lda #%10000000
+	sta oam +(2*4) + 2
+
+	; place our middel bar sprite on the screen
+ 	lda #126
+ 	sta oam +(3*4)  ; set Y
+ 	lda #30
+ 	sta oam  +(3*4) + 3 ; set X
+ 	lda #6
+	sta oam +(3*4)+ 1
+	lda #0
+	sta oam +(3*4) + 2
+
+	; place our player sprite on the screen
+ 	lda #126
+ 	sta oam +(10*4)  ; set Y
+ 	lda #23
+ 	sta oam  +(10*4) + 3 ; set X
+ 	lda #1
+	sta oam +(10*4)+ 1
+	lda #0
+	sta oam +(10*4) + 2
 
 
-jsr gamepad_poll
- 	lda gamepad
- 	and #PAD_A
- 	beq NOT_A
-		jmp mainloop
-NOT_A:
-	lda gamepad
- 	and #PAD_B
- 	beq NOT_START
-		jmp mainloop_single
-NOT_START:
+	;Right Sprite
 
-jmp title_screen
+	; place our right middle bat sprite on the screen
+ 	lda #118
+ 	sta oam+(4*4)  ; set Y
+ 	lda # 256 - 30
+ 	sta oam+(4*4)  + 3 ; set X
+ 	lda #6
+	sta oam+(4*4) + 1
+	lda #%01000001
+	sta oam+(4*4) + 2
+
+	; place our right top sprite on the screen
+ 	lda #110
+ 	sta oam + (5*4)  ; set Y
+ 	lda #256 - 30
+ 	sta oam + (5*4) + 3 ; set X
+ 	lda #7
+	sta oam +(5*4) + 1
+	lda #%01000001
+	sta oam + (5*4) + 2
+
+	; place our right bottom sprite on the screen
+ 	lda #134
+ 	sta oam +(6*4)  ; set Y
+ 	lda #256 - 30
+ 	sta oam  +(6*4) + 3 ; set X
+ 	lda #7
+	sta oam +(6*4)+ 1
+	lda #%11000001
+	sta oam +(6*4) + 2
+
+	; place our right middle sprite on the screen
+ 	lda #126
+ 	sta oam +(7*4)  ; set Y
+ 	lda #256 - 30
+ 	sta oam  +(7*4) + 3 ; set X
+ 	lda #6
+	sta oam +(7*4)+ 1
+	lda #%01000001
+	sta oam + (7*4) + 2
+
+	; place our right player sprite on the screen
+ 	lda #126
+ 	sta oam +(9*4)  ; set Y
+ 	lda #256 - 23
+ 	sta oam  +(9*4) + 3 ; set X
+ 	lda #1
+	sta oam +(9*4)+ 1
+	lda #%01000001
+	sta oam + (9*4) + 2
 
 
- 	mainloop:
+
+; place ball sprite on the screen
+
+ 	lda #124
+ 	sta oam + (8 * 4) ; set Y
+ 	sta oam + (8 * 4) + 3 ; set X
+	lda #03
+ 	sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #2
+ 	sta oam + (8 * 4) + 2 ; set atttibutes
+
+ 	; set the ball velocity
+ 	lda #1
+ 	sta d_x
+	lda #0
+ 	sta d_y
+
+;place spectator sprite on screen;
+	lda #215
+ 	sta oam + (11 * 4) ; set Y
+	lda #100
+ 	sta oam + (11 * 4) + 3 ; set X
+	lda #43
+ 	sta oam + (11 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (11 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (12 * 4) ; set Y
+	lda #125
+ 	sta oam + (12 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (12 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (12 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (13 * 4) ; set Y
+	lda #150
+ 	sta oam + (13 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (13 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (13 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (14 * 4) ; set Y
+	lda #175
+ 	sta oam + (14 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (14 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (14 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (15 * 4) ; set Y
+	lda #75
+ 	sta oam + (15 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (15 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (15 * 4) + 2 ; set atttibutes
+
+
+	lda #215
+ 	sta oam + (17 * 4) ; set Y
+	lda #50
+ 	sta oam + (17 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (17 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (17 * 4) + 2 ; set atttibutes
+
+	lda #215
+ 	sta oam + (18 * 4) ; set Y
+	lda #200
+ 	sta oam + (18 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (18 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #0
+ 	sta oam + (18 * 4) + 2 ; set atttibutes
+
+	;bottom row of spectators
+
+	lda #232
+ 	sta oam + (19 * 4) ; set Y
+	lda #100
+ 	sta oam + (19 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (19 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (19 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (20 * 4) ; set Y
+	lda #125
+ 	sta oam + (20 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (20 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (20* 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (21 * 4) ; set Y
+	lda #150
+ 	sta oam + (21 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (21 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (21 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (22 * 4) ; set Y
+	lda #175
+ 	sta oam + (22* 4) + 3 ; set X
+	lda #1
+ 	sta oam + (22 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (22 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (23 * 4) ; set Y
+	lda #75
+ 	sta oam + (23 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (23 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (23 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (23 * 4) ; set Y
+	lda #75
+ 	sta oam + (23 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (23 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (23 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (24 * 4) ; set Y
+	lda #50
+ 	sta oam + (24 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (24 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (24 * 4) + 2 ; set atttibutes
+
+	lda #232
+ 	sta oam + (25 * 4) ; set Y
+	lda #200
+ 	sta oam + (25 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (25 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (25 * 4) + 2 ; set atttibutes
+
+;Place second row of spectators
+	lda #224
+ 	sta oam + (26 * 4) ; set Y
+	lda #37
+ 	sta oam + (26 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (26 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (26 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (27 * 4) ; set Y
+	lda #87
+ 	sta oam + (27 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (27 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (27 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (28 * 4) ; set Y
+	lda #137
+ 	sta oam + (28 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (28 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (28 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (29 * 4) ; set Y
+	lda #187
+ 	sta oam + (29 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (29 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000000
+ 	sta oam + (29 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (30 * 4) ; set Y
+	lda #62
+ 	sta oam + (30 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (30 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (30 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (31 * 4) ; set Y
+	lda #112
+ 	sta oam + (31 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (31 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (31 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (32 * 4) ; set Y
+	lda #162
+ 	sta oam + (32 * 4) + 3 ; set X
+	lda #1
+ 	sta oam + (32 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (32 * 4) + 2 ; set atttibutes
+
+	lda #224
+ 	sta oam + (33 * 4) ; set Y
+	lda #212
+ 	sta oam + (33 * 4) + 3 ; set X
+	lda #43
+ 	sta oam + (33 * 4) + 1 ; set patter + (1 * 4)n
+ 	lda #%00000001
+ 	sta oam + (33 * 4) + 2 ; set atttibutes
+jmp mainloop
+
+mainloop:
  	
  	; ball animation
  	clc
@@ -1942,17 +2314,17 @@ title_attrites:
 ; Display Main Game Screen
 ;*****************************************************************
 
-.segment "RODATA"
-; put the data in our data segment of the ROM
-game_screen_mountain:
-.byte 001,002,003,004,001,002,003,004,001,002,003,004,001,002,003,004
-.byte 001,002,003,004,001,002,003,004,001,002,003,004,001,002,003,004
-game_screen_scoreline:
-.byte "SCORE 0000000"
+; .segment "RODATA"
+; ; put the data in our data segment of the ROM
+; game_screen_mountain:
+; .byte 001,002,003,004,001,002,003,004,001,002,003,004,001,002,003,004
+; .byte 001,002,003,004,001,002,003,004,001,002,003,004,001,002,003,004
+; game_screen_scoreline:
+; .byte "SCORE 0000000"
 
 .segment "CODE"
  .proc display_game_screen
-jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
+	jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
 
  	jsr clear_nametable ; Clear the 1st name table
 
