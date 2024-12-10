@@ -337,7 +337,7 @@ display_digit:
 ;*****************************************************************
  .segment "CODE"
  .proc main
- 	lda #1 ; NTSC 
+ 	lda #1 ; C 
     ldx #0 
     ldy #0 
     jsr famistudio_init
@@ -694,6 +694,23 @@ paletteloop:
 
 jsr display_game_screen
 
+title_screen:
+
+
+jsr gamepad_poll
+ 	lda gamepad
+ 	and #PAD_A
+ 	beq NOT_A
+		jmp mainloop
+NOT_A:
+	lda gamepad
+ 	and #PAD_B
+ 	beq NOT_START
+		jmp mainloop_single
+NOT_START:
+
+jmp title_screen
+
 
  	mainloop:
  	
@@ -853,12 +870,22 @@ jsr display_game_screen
 	bne NOT_HITTOP
 		lda #1
 		sta d_y
+		lda #FAMISTUDIO_SFX_CH0
+    	sta sfx_channel
+
+    	lda #2 ;sound: wall hit
+    	jsr play_sfx
  NOT_HITTOP:
  	lda oam + (8 * 4) + 0
  	cmp #198 ; have we hit the bottom border
  	bne NOT_HITBOTTOM
  		lda #$FF ; reverse direction (-1)
  		sta d_y
+		lda #FAMISTUDIO_SFX_CH0
+		sta sfx_channel
+
+    	lda #2 ;sound: wall hit
+    	jsr play_sfx
  NOT_HITBOTTOM:
  	lda oam + (8 * 4) + 3 ; get the current x
  	clc
@@ -869,6 +896,11 @@ jsr display_game_screen
 		jsr increment_ScorePlayer2
  		lda #1 ; reverse direction
  		sta d_x
+		lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #3 ;sound: wall hit
+    jsr play_sfx
  NOT_HITLEFT:
  	lda oam + (8 * 4) + 3
  	cmp #248 ; have we hit the right border
@@ -876,6 +908,11 @@ jsr display_game_screen
 		jsr increment_ScorePlayer1
  		lda #$FF ; reverse direction (-1)
  		sta d_x
+		lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #3 ;sound: wall hit
+    jsr play_sfx
  NOT_HITRIGHT:
 
  collision_detection:
@@ -1207,7 +1244,7 @@ end_of_look:
  	lda #1
  	sta nmi_ready
  	jmp mainloop
-	
+
 win_screen:
 jsr offscreen_sprites
 win_loop:
@@ -1220,6 +1257,556 @@ jsr gamepad_poll
  	beq NOT_RESET
 		jmp reset
 NOT_RESET:
+
+jsr famistudio_update
+
+jmp win_loop	
+
+mainloop_single: ;THIS IS THE CODE FOR SINGLE PLAYER PONG, I MADE THIS TEXT EXTRA LONG SO I CAN EASILIY FIND THE BEGINING OF THIS CODE, I DONT KNOW WHAT ELSE TO SAY SO I JUST YAP
+ 	
+ 	; ball animation
+ 	clc
+	inc timer
+    lda timer
+    cmp #255 ;determens speed of animation
+    bne skip_reset_single
+    lda #00
+    sta timer
+
+    inc animbyte
+    lda animbyte
+    cmp #06
+    bne skip_reset_single
+    lda #03
+    sta animbyte
+    skip_reset_single:
+
+    lda #124
+
+     lda animbyte
+     sta oam + (8 * 4) + 1 ; set patter + (1 * 4)n
+     lda #2
+     sta oam + (8 * 4) + 2 ; set atttibutes
+
+ ; skip reading controls if and change has not been drawn
+ 	lda nmi_ready
+ 	cmp #0
+ 	bne mainloop_single
+ ; read the gamepad
+ 	jsr gamepad_poll
+ 	; now move the bat if left or right pressed
+ 	lda gamepad
+ 	and #PAD_U
+ 	beq NOT_GAMEPAD_UP_single
+ 		; gamepad has been pressed left
+ 		lda oam+(1*4) ; get current Y
+ 		cmp #24
+ 		beq NOT_GAMEPAD_UP_single
+		lda oam
+ 		sec
+ 		sbc #2
+ 		sta oam ; change Y to the left
+		lda oam +(1*4)
+		sec
+		sbc #2
+		sta oam +(1*4)
+		lda oam +(2*4)
+		sec
+		sbc #2
+		sta oam +(2*4)
+		lda oam +(3*4)
+		sec
+		sbc #2
+		sta oam +(3*4)
+		lda oam +(10*4)
+		sec
+		sbc #2
+		sta oam +(10*4)
+ NOT_GAMEPAD_UP_single:
+ 	lda gamepad
+ 	and #PAD_D
+ 	beq NOT_GAMEPAD_DOWN_single
+ 		; gamepad has been pressed right
+ 		lda oam + (2*4) ; get current Y
+ 		cmp #198
+ 		beq NOT_GAMEPAD_DOWN_single
+		lda oam
+ 		clc
+ 		adc #2
+ 		sta oam ; change Y to the left
+		lda oam +(1*4)
+		clc
+ 		adc #2
+		sta oam +(1*4)
+		lda oam +(2*4)
+		clc
+ 		adc #2
+		sta oam +(2*4)
+		lda oam +(3*4)
+		clc
+ 		adc #2
+		sta oam +(3*4)
+		lda oam +(10*4)
+		clc
+ 		adc #2
+		sta oam +(10*4)
+ NOT_GAMEPAD_DOWN_single:
+
+ ; read the gamepad
+ 	jsr gamepad_poll_2
+ 	; now move the bat if left or right pressed
+ 	lda gamepad
+ 	and #PAD_U
+ 	beq NOT_GAMEPAD_UP_2_single
+ 		; gamepad has been pressed left
+ 		lda oam+(5*4) ; get current Y
+ 		cmp #24
+ 		beq NOT_GAMEPAD_UP_2_single
+		lda oam +(4*4)
+ 		sec
+ 		sbc #2
+ 		sta oam +(4*4); change Y to the left
+		lda oam +(5*4)
+		sec
+		sbc #2
+		sta oam +(5*4)
+		lda oam +(6*4)
+		sec
+		sbc #2
+		sta oam +(6*4)
+		lda oam +(7*4)
+		sec
+		sbc #2
+		sta oam +(7*4)
+		lda oam +(9*4)
+		sec
+		sbc #2
+		sta oam +(9*4)
+ NOT_GAMEPAD_UP_2_single:
+ 	lda gamepad
+ 	and #PAD_D
+ 	beq NOT_GAMEPAD_DOWN_2_single
+ 		; gamepad has been pressed right
+ 		lda oam + (6*4) ; get current Y
+ 		cmp #198
+ 		beq NOT_GAMEPAD_DOWN_2_single
+		lda oam+(4*4)
+ 		clc
+ 		adc #2
+ 		sta oam +(4*4); change Y to the left
+		lda oam +(5*4)
+		clc
+ 		adc #2
+		sta oam +(5*4)
+		lda oam +(6*4)
+		clc
+ 		adc #2
+		sta oam +(6*4)
+		lda oam +(7*4)
+		clc
+ 		adc #2
+		sta oam +(7*4)
+		lda oam +(9*4)
+		clc
+ 		adc #2
+		sta oam +(9*4)
+ NOT_GAMEPAD_DOWN_2_single:
+
+	lda oam + (8 * 4) + 0
+	clc
+	adc d_y
+	sta oam + (8 * 4) + 0
+	cmp #24
+	bne NOT_HITTOP_single
+		lda #1
+		sta d_y
+		lda #FAMISTUDIO_SFX_CH0
+   		 sta sfx_channel
+
+    	lda #2 ;sound: wall hit
+    	jsr play_sfx
+ NOT_HITTOP_single:
+ 	lda oam + (8 * 4) + 0
+ 	cmp #198 ; have we hit the bottom border
+ 	bne NOT_HITBOTTOM_single
+ 		lda #$FF ; reverse direction (-1)
+ 		sta d_y
+		lda #FAMISTUDIO_SFX_CH0
+    	sta sfx_channel
+
+    	lda #2 ;sound: wall hit
+    	jsr play_sfx
+ NOT_HITBOTTOM_single:
+ 	lda oam + (8 * 4) + 3 ; get the current x
+ 	clc
+ 	adc d_x	; add the X velocity
+ 	sta oam + (8 * 4) + 3
+ 	cmp #0 ; have we hit the left border
+ 	bne NOT_HITLEFT_single
+		jsr increment_ScorePlayer2
+ 		lda #1 ; reverse direction
+ 		sta d_x
+		lda #FAMISTUDIO_SFX_CH0
+    	sta sfx_channel
+
+    	lda #3 ;sound: wall hit
+    	jsr play_sfx
+ NOT_HITLEFT_single:
+ 	lda oam + (8 * 4) + 3
+ 	cmp #248 ; have we hit the right border
+ 	bne NOT_HITRIGHT_single
+		jsr increment_ScorePlayer1
+ 		lda #$FF ; reverse direction (-1)
+ 		sta d_x
+		lda #FAMISTUDIO_SFX_CH0
+    	sta sfx_channel
+
+    	lda #3 ;sound: wall hit
+    	jsr play_sfx
+ NOT_HITRIGHT_single:
+
+ collision_detection_single:
+	;storing the ball information for collision detection
+ 	lda oam + (8*4)+3
+	sta cx1
+
+	lda oam + (8*4)
+	sta cy1
+
+	lda #6
+	sta ch1
+	sta cw1
+
+TOP_HIT_single:
+	;storing top sprite information for collision detection
+	lda oam + (1*4)+3
+	sta cx2
+
+	lda oam + (1*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+
+	bcc MIDDLE_HIT_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
+	lda #$FF
+	sta d_y
+	;dec d_y
+	lda #1 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision_single
+
+
+ MIDDLE_HIT_single:
+ ;storing middle top sprite information for collision detection
+	lda oam + (0*4)+3
+	sta cx2
+
+	lda oam + (0*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_SECOND_HIT_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
+	lda #0
+	sta d_y
+	lda #2 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision_single
+MIDDLE_SECOND_HIT_single:
+;storing middle bottom sprite information for collision detection
+	lda oam + (3*4)+3
+	sta cx2
+
+	lda oam + (3*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc BOTTOM_HIT_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
+	lda #0
+	sta d_y
+	lda #2 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision_single
+BOTTOM_HIT_single:
+;storing bottom sprite information for collision detection
+lda oam + (2*4)+3
+	sta cx2
+
+	lda oam + (2*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc end_of_left_collision_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #0
+    jsr play_sfx
+
+	lda #1
+	sta d_y
+	;inc d_y
+	lda #1 ; reverse direction
+	sta d_x
+	jmp end_of_left_collision_single
+
+
+end_of_left_collision_single:
+TOP_HIT_RIGHT_single:
+	;storing top right sprite information for collision detection
+	lda oam + (5*4)+3
+	sta cx2
+
+	lda oam + (5*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_HIT_RIGHT_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
+	lda #$FF
+	sta d_y
+	;dec d_y
+	lda #$FF ; reverse direction
+	sta d_x
+	jmp end_of_right_collision_single
+ MIDDLE_HIT_RIGHT_single:
+ ;storing middle top righ sprite information for collision detection
+	lda oam + (4*4)+3
+	sta cx2
+
+	lda oam + (4*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc MIDDLE_SECOND_HIT_RIGHT_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
+	lda #0
+	sta d_y
+	lda #$FE ; reverse direction
+	sta d_x
+	jmp end_of_right_collision_single
+MIDDLE_SECOND_HIT_RIGHT_single:
+;storing middle bottom right sprite information for collision detection
+	lda oam + (7*4)+3
+	sta cx2
+
+	lda oam + (7*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc BOTTOM_HIT_RIGHT_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
+	lda #0
+	sta d_y
+	lda #$FE ; reverse direction
+	sta d_x
+	jmp end_of_right_collision_single
+BOTTOM_HIT_RIGHT_single:
+;storing bottom right sprite information for collision detection
+lda oam + (6*4)+3
+	sta cx2
+
+	lda oam + (6*4)
+	sta cy2
+
+	lda #6
+	sta ch2
+	sta cw2
+
+	jsr collision_test
+	bcc end_of_right_collision_single
+
+	;sound play
+    lda #FAMISTUDIO_SFX_CH0
+    sta sfx_channel
+
+    lda #1
+    jsr play_sfx
+
+	lda #1
+	sta d_y
+	;inc d_y
+	lda #$FF ; reverse direction
+	sta d_x
+	jmp end_of_right_collision_single
+end_of_right_collision_single:
+
+
+spectator_look_at_single:
+	lda oam + (8 * 4) + 3
+	cmp #122
+	bpl looking_right_single
+
+	;lda d_x
+	;cmp #1
+	;beq looking_right
+	;lda d_x
+	;cmp #1
+	;beq looking_right
+	
+looking_left_single:
+
+
+	lda #%01000000
+	sta oam + (11*4) + 2
+	sta oam + (12*4) + 2
+	sta oam + (13*4) + 2
+	sta oam + (14*4) + 2
+	sta oam + (15*4) + 2
+	sta oam + (16*4) + 2
+	sta oam + (17*4) + 2
+	sta oam + (18*4) + 2
+	sta oam + (26*4) + 2
+	sta oam + (27*4) + 2
+	sta oam + (28*4) + 2
+	sta oam + (29*4) + 2
+	lda #%01000001
+	sta oam + (19*4) + 2
+	sta oam + (20*4) + 2
+	sta oam + (21*4) + 2
+	sta oam + (22*4) + 2
+	sta oam + (23*4) + 2
+	sta oam + (24*4) + 2
+	sta oam + (25*4) + 2
+	sta oam + (30*4) + 2
+	sta oam + (31*4) + 2
+	sta oam + (32*4) + 2
+	sta oam + (33*4) + 2
+
+	jmp end_of_look_single
+
+	
+looking_right_single:
+	lda #%00000000
+	sta oam + (11*4) + 2
+	sta oam + (12*4) + 2
+	sta oam + (13*4) + 2
+	sta oam + (14*4) + 2
+	sta oam + (15*4) + 2
+	sta oam + (16*4) + 2
+	sta oam + (17*4) + 2
+	sta oam + (18*4) + 2
+	sta oam + (26*4) + 2
+	sta oam + (27*4) + 2
+	sta oam + (28*4) + 2
+	sta oam + (29*4) + 2
+
+	lda #%00000001
+	sta oam + (19*4) + 2
+	sta oam + (20*4) + 2
+	sta oam + (21*4) + 2
+	sta oam + (22*4) + 2
+	sta oam + (23*4) + 2
+	sta oam + (24*4) + 2
+	sta oam + (25*4) + 2
+	sta oam + (30*4) + 2
+	sta oam + (31*4) + 2
+	sta oam + (32*4) + 2
+	sta oam + (33*4) + 2
+	
+end_of_look_single:
+
+ 	lda #5
+	cmp player1_score
+	beq win_screen_single
+
+	lda #5
+	cmp player2_score
+	beq win_screen_single
+
+	jsr famistudio_update
+
+ ; ensure our changes are rendered
+ 	lda #1
+ 	sta nmi_ready
+ 	jmp mainloop_single
+
+win_screen_single:
+jsr offscreen_sprites
+win_loop_single:
+lda 0
+sta player1_score
+sta player2_score
+jsr gamepad_poll
+ 	lda gamepad
+ 	and #PAD_START
+ 	beq NOT_RESET_single
+		jmp reset
+NOT_RESET_single:
 
 jsr famistudio_update
 
