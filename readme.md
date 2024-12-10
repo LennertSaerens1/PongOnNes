@@ -25,7 +25,8 @@ Open the project folder in Visual Studio.
 * Run the resulting .nes file located in the debug folder in your preferred emulator.
 
 # Controls
-**Controls in emulators are contingent upon the user's configuration settings within the emulator software.** <br>
+**Keyboard Controls in emulators are contingent upon the user's configuration settings within the emulator software.** <br> <br>
+### NES Controller controls:
 D-Pad Up = Move paddle up <br>
 D-Pad Down = Move paddle down <br> 
 A = Singleplayer <br>
