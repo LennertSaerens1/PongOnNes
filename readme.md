@@ -4,6 +4,7 @@ We are the NerdSquad, and our mission is to create Pong for the NES.
 This project is a collaborative effort by Karel Roelandt, Bram Sprenger, Lennert Saerens, and Thymme Mouchrique. During development, we utilized Visual Studio and the MesenX emulator to ensure a smooth and efficient workflow.
 
 # Instructions to Build and Debug the Project
+This project includes a default build folder. If your objective does not involve making modifications, you can simply access the build folder to obtain and run the final build.
 
 ### Prerequisites
 - Alchemy65 (for Visual Studio Code integration)
@@ -21,7 +22,15 @@ Open the project folder in Visual Studio.
 
 ### Building Outside Visual Studio Code:
 * Simply execute the build_outside_vs.bat script.
-* Run the resulting .nes file located in the debug folder.
+* Run the resulting .nes file located in the debug folder in your preferred emulator.
+
+# Controls
+**Controls in emulators are contingent upon the user's configuration settings within the emulator software.** <br>
+D-Pad Up = Move paddle up <br>
+D-Pad Down = Move paddle down <br> 
+A = Singleplayer <br>
+B = Multiplayer <br> 
+START = Pause game <br> 
 
 ##  References
 [Mesen](https://www.mesen.ca) <br>
