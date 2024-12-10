@@ -18,5 +18,5 @@ Ensure the launch.json file is configured correctly to point to your mesen.exe.
 * Run the resulting .nes file located in the debug folder.
 
 ##  References
-[Mesen] (https://www.mesen.ca) <br>
-[CC65] (https://cc65.github.io)
+[Mesen](https://www.mesen.ca) <br>
+[CC65](https://cc65.github.io)
