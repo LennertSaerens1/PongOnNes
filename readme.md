@@ -19,7 +19,7 @@ Open the project folder in Visual Studio.
 - Press Shift + Ctrl + B to build the project. Alternatively, select Run → Start Debugging.
 **Ensure the launch.json file within .vs is configured correctly to point to your mesen.exe, and make sure your environments variables are set correctly to point to CC65.**
 
-### Building Outside Visual Studio:
+### Building Outside Visual Studio Code:
 * Simply execute the build_outside_vs.bat script.
 * Run the resulting .nes file located in the debug folder.
 
