@@ -29,5 +29,6 @@ Can't. Closed project.
 [Mesen](https://www.mesen.ca) <br>
 [Mesen X](https://github.com/NovaSquirrel/Mesen-X) <br>
 [CC65](https://cc65.github.io) <br>
+[Alchemy65](https://marketplace.visualstudio.com/items?itemName=alchemic-raker.alchemy65) <br>
 [How to link visual studio code to your mesen (presentation)](https://www.mediafire.com/file/w174k29k9ji6ayk/How_to_link_your_VS_code_to_your_Emulator_Presented_By_Karel.pptx/file) <br>
 Special thanks to the creators of CC65, Alchemy65, and MesenX for their tools.  
