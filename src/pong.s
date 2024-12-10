@@ -21,7 +21,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 
 .segment "TILES"
-.incbin "pong_cheat.chr"
+.incbin "assets/pong.chr"
 
 ;*****************************************************************
 ; Define NES interrupt vectors
@@ -99,7 +99,7 @@ FAMISTUDIO_DPCM_OFF = $e000
 
 .include "famistudio_ca65.s"
 
-.include "test.s"
+.include "SoundEngine.s"
 
 .segment "ZEROPAGE"
 
